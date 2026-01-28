@@ -4,3 +4,4 @@ matplotlib
 streamlit
 Pillow
 joblib
+altair==4.2.2
