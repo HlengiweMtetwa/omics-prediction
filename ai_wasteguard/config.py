@@ -33,3 +33,10 @@ def get_database_url() -> str:
 
 ACCOUNT_LOCKOUT_THRESHOLD = int(os.environ.get("ACCOUNT_LOCKOUT_THRESHOLD", "5"))
 ACCOUNT_LOCKOUT_MINUTES = int(os.environ.get("ACCOUNT_LOCKOUT_MINUTES", "15"))
+
+# Used to sign API access tokens (ai_wasteguard/tokens.py). The default is
+# fine for local development only - any real deployment MUST override this
+# via the API_SECRET_KEY environment variable, or every deployment sharing
+# the default would accept each other's tokens.
+API_SECRET_KEY = os.environ.get("API_SECRET_KEY", "dev-insecure-secret-change-me-before-any-real-deployment")
+API_TOKEN_EXPIRY_MINUTES = int(os.environ.get("API_TOKEN_EXPIRY_MINUTES", "60"))

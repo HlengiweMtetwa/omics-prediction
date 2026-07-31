@@ -72,6 +72,10 @@ pytest tests/ -v
   `models/random_forest_model.pkl` and `results/` outputs reflect the most
   recent pipeline run and will go stale if the code changes without
   re-running the pipeline.
+- The API (`api/`) only covers auth and projects so far - sites, samples,
+  uploads, jobs, reports and models are only reachable through the
+  Streamlit UI for now. No rate limiting is implemented despite
+  `ACCOUNT_LOCKOUT_*` existing at the auth-service level.
 
 ## Persistence and authentication (`ai_wasteguard/`)
 
@@ -156,7 +160,54 @@ Setup:
 ```bash
 pip install -r requirements.txt
 alembic upgrade head        # creates instance/app.db and applies schema
-pytest tests/test_auth.py tests/test_models.py tests/test_registry.py tests/test_uploads.py tests/test_audit_and_permissions.py tests/test_jobs.py tests/test_reports.py tests/test_db.py tests/test_model_registry.py tests/test_admin.py tests/test_dashboard.py -v
+pytest tests/test_auth.py tests/test_models.py tests/test_registry.py tests/test_uploads.py tests/test_audit_and_permissions.py tests/test_jobs.py tests/test_reports.py tests/test_db.py tests/test_model_registry.py tests/test_admin.py tests/test_dashboard.py tests/test_tokens.py -v
+```
+
+## API (`api/`)
+
+A FastAPI backend over the *same* `ai_wasteguard` services the Streamlit
+app uses - not a reimplementation. This is the concrete proof of the
+platform's layering promise ("presentation layers call services, not the
+ORM directly"): register a user or create a project through the API, and
+it shows up identically in the Streamlit app's registry pages and audit
+log, and vice versa, because both go through `ai_wasteguard.auth` /
+`ai_wasteguard.registry`.
+
+- Auth is **stateless JWT**, independent of Streamlit's session-based
+  `app_state.py` - `POST /api/v1/auth/register`, `POST /api/v1/auth/login`
+  (returns a bearer token), `GET /api/v1/auth/me`.
+- `GET/POST /api/v1/projects`, `GET /api/v1/projects/{id}` - the same
+  RBAC as the UI (`permissions.CAN_CREATE_PROJECT`), and requesting a
+  project you don't own returns 404, not 403 - deliberately, so the API
+  doesn't confirm a project id exists to someone who can't see it (same
+  principle as the enumeration-safe login error).
+- Unhandled exceptions never reach the client as a stack trace - a
+  global handler logs and returns a generic 500.
+- CORS is closed by default; set `CORS_ALLOWED_ORIGINS` to open it to
+  specific browser origins.
+- `API_SECRET_KEY` signs access tokens - **must** be overridden via env
+  var before any real deployment; the checked-in default is intentionally
+  labeled insecure.
+
+Run it:
+
+```bash
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn api.main:app --reload
+# interactive docs at http://127.0.0.1:8000/docs
+```
+
+Verified with real HTTP requests (curl against a running `uvicorn`
+process, not just FastAPI's in-process TestClient) covering the full
+register → login → authenticated create/list/get flow, all the negative
+cases (duplicate email, wrong password, missing/invalid token, a Viewer
+role rejected from creating a project, a non-owner requesting someone
+else's project id), and confirmed via the `audit_log` table that API-driven
+actions are indistinguishable from UI-driven ones.
+
+```bash
+pytest tests/test_api.py -v
 ```
 
 ## Registry + upload + pipelines + reports + models app (`Home.py`)

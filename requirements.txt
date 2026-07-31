@@ -15,3 +15,8 @@ alembic
 argon2-cffi
 python-dotenv
 psycopg2-binary
+fastapi
+uvicorn[standard]
+httpx
+pyjwt
+email-validator
