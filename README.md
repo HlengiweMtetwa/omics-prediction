@@ -238,10 +238,11 @@ pytest tests/test_api.py -v
 
 A Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 client for
 the FastAPI backend above, covering registration, login, the dashboard
-(`GET /api/v1/dashboard`), and project listing/creation. It's the beginning of
-a full frontend replacing the Streamlit registry app one page at a time — for
-now, Sites & Sampling, Uploads, Pipelines, Reports, and Models are still only
-reachable through `Home.py`.
+(`GET /api/v1/dashboard`), project listing/creation, and a project detail
+page with nested site → sampling event → sample creation and drilldown. It's
+the beginning of a full frontend replacing the Streamlit registry app one
+page at a time — for now, Uploads, Pipelines, Reports, and Models are still
+only reachable through `Home.py`.
 
 ```bash
 cd frontend
@@ -260,8 +261,11 @@ Verified end-to-end in a real headless browser (Playwright) against a live
 backend: unauthenticated visitor redirected to `/login`; register → redirect
 to `/login`; log in → redirect to `/dashboard` with real (not mocked) data
 from the API; create a project through the React form → it appears in
-`/projects`, a real round trip through `POST /api/v1/projects`; no crashes or
-console errors along the way.
+`/projects`, a real round trip through `POST /api/v1/projects`; open a
+project's detail page → create a site → expand it and create a sampling
+event → expand that and create a sample, each step a real API round trip and
+each list re-fetched (not appended client-side) so what's shown is what the
+server actually persisted; no crashes or console errors along the way.
 
 Colors, spacing, and status indicators follow a validated categorical/status
 palette (`app/globals.css`), with light/dark variants selected by both the OS

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, FormEvent } from "react";
+import Link from "next/link";
 import { useRequireAuth } from "@/lib/auth-context";
 import { api, ApiError, Project } from "@/lib/api";
 import AppShell from "@/components/AppShell";
@@ -170,9 +171,10 @@ export default function ProjectsPage() {
       {projects && projects.length > 0 && (
         <div className="flex flex-col gap-3">
           {projects.map((p) => (
-            <div
+            <Link
               key={p.id}
-              className="rounded-xl border p-4"
+              href={`/projects/${p.id}`}
+              className="rounded-xl border p-4 block hover:border-transparent transition-colors"
               style={{ borderColor: "var(--gridline)", background: "var(--surface-1)" }}
             >
               <div className="flex items-center justify-between">
@@ -195,7 +197,7 @@ export default function ProjectsPage() {
                 {p.disease_focus && <span>Disease focus: {p.disease_focus}</span>}
                 {p.amr_focus && <span>AMR focus</span>}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

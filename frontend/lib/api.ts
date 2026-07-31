@@ -92,6 +92,38 @@ export interface DashboardSummary {
   recent_activity: ActivityEvent[];
 }
 
+export interface Site {
+  id: string;
+  project_id: string;
+  name: string;
+  country: string | null;
+  region: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  site_type: string | null;
+  created_at: string;
+}
+
+export interface SamplingEvent {
+  id: string;
+  site_id: string;
+  collected_at: string;
+  sample_matrix: string | null;
+  collector: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface Sample {
+  id: string;
+  sampling_event_id: string;
+  sample_type: string | null;
+  replicate: number;
+  lab_identifier: string | null;
+  analysis_status: string;
+  created_at: string;
+}
+
 export const api = {
   register: (payload: {
     full_name: string;
@@ -129,6 +161,63 @@ export const api = {
     }
   ) =>
     request<Project>("/api/v1/projects", {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  getProject: (token: string, projectId: string) =>
+    request<Project>(`/api/v1/projects/${projectId}`, { token }),
+
+  listSites: (token: string, projectId: string) =>
+    request<Site[]>(`/api/v1/projects/${projectId}/sites`, { token }),
+
+  createSite: (
+    token: string,
+    projectId: string,
+    payload: {
+      name: string;
+      country?: string;
+      region?: string;
+      latitude?: number;
+      longitude?: number;
+      site_type?: string;
+    }
+  ) =>
+    request<Site>(`/api/v1/projects/${projectId}/sites`, {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  listSamplingEvents: (token: string, siteId: string) =>
+    request<SamplingEvent[]>(`/api/v1/sites/${siteId}/sampling-events`, { token }),
+
+  createSamplingEvent: (
+    token: string,
+    siteId: string,
+    payload: {
+      collected_at: string;
+      sample_matrix?: string;
+      collector?: string;
+      notes?: string;
+    }
+  ) =>
+    request<SamplingEvent>(`/api/v1/sites/${siteId}/sampling-events`, {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  listSamples: (token: string, eventId: string) =>
+    request<Sample[]>(`/api/v1/sampling-events/${eventId}/samples`, { token }),
+
+  createSample: (
+    token: string,
+    eventId: string,
+    payload: { sample_type?: string; replicate?: number; lab_identifier?: string }
+  ) =>
+    request<Sample>(`/api/v1/sampling-events/${eventId}/samples`, {
       method: "POST",
       token,
       body: JSON.stringify(payload),
