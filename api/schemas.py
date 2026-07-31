@@ -106,5 +106,32 @@ class SampleResponse(BaseModel):
     created_at: datetime
 
 
+class UploadResponse(BaseModel):
+    id: str
+    sample_id: str
+    original_filename: str
+    file_type: str
+    omics_type: str | None
+    size_bytes: int
+    checksum_sha256: str
+    validation_status: str
+    created_at: datetime
+
+
+class JobCreateRequest(BaseModel):
+    pipeline_name: str = "synthetic_omics_demo"
+
+
+class JobResponse(BaseModel):
+    id: str
+    project_id: str
+    pipeline_name: str
+    status: str
+    error_message: str | None
+    created_at: datetime
+    started_at: datetime | None
+    completed_at: datetime | None
+
+
 class ErrorResponse(BaseModel):
     detail: str

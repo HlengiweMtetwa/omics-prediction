@@ -72,9 +72,9 @@ pytest tests/ -v
   `models/random_forest_model.pkl` and `results/` outputs reflect the most
   recent pipeline run and will go stale if the code changes without
   re-running the pipeline.
-- The API (`api/`) covers auth, projects, sites, sampling events and
-  samples; uploads, jobs, reports and models are only reachable through
-  the Streamlit UI for now. No rate limiting is implemented despite
+- The API (`api/`) covers auth, projects, sites, sampling events, samples,
+  uploads and jobs; reports and models are only reachable through the
+  Streamlit UI for now. No rate limiting is implemented despite
   `ACCOUNT_LOCKOUT_*` existing at the auth-service level.
 
 ## Persistence and authentication (`ai_wasteguard/`)
@@ -184,6 +184,17 @@ log, and vice versa, because both go through `ai_wasteguard.auth` /
   way the registry actually is, each authorization-checked up the whole
   chain (a sample's event's site's project must be owned by the caller).
   A duplicate replicate for the same sampling event returns 409, not 500.
+- `GET/POST /api/v1/samples/{sample_id}/uploads` (multipart) - same
+  checksum/extension-allowlist validation as the UI upload path
+  (`ai_wasteguard.uploads.save_upload`, not a reimplementation).
+- `GET/POST /api/v1/projects/{project_id}/jobs`, `GET /api/v1/jobs/{id}` -
+  submitting a job returns immediately with status `queued`; execution
+  runs on a background thread (mirroring the Streamlit Pipelines page)
+  so the request isn't blocked for the ~5 seconds the synthetic pipeline
+  takes. The job row is committed explicitly before the thread starts -
+  the background thread opens its own DB session, and waiting for
+  FastAPI's normal request-teardown commit would let it race a read of a
+  row that isn't durably visible yet.
 - Requesting (or mutating) a resource you don't own returns 404, not
   403 - deliberately, at every level of the chain, so the API never
   confirms a resource id exists to someone who can't see it (same
@@ -209,12 +220,15 @@ uvicorn api.main:app --reload
 
 Verified with real HTTP requests (curl against a running `uvicorn`
 process, not just FastAPI's in-process TestClient) covering the full
-register → login → project → site → sampling event → sample chain, all
-the negative cases (duplicate email, wrong password, missing/invalid
-token, a Viewer role rejected from creating a project, a non-owner
-requesting someone else's project/site, a duplicate replicate returning
-409), and confirmed directly in the database (including `audit_log`) that
-API-driven actions are indistinguishable from UI-driven ones.
+register → login → project → site → sampling event → sample → upload →
+job chain, all the negative cases (duplicate email, wrong password,
+missing/invalid token, a Viewer role rejected from creating a project, a
+non-owner requesting someone else's project/site, a duplicate replicate
+returning 409, an unsupported file extension returning 400), and
+confirmed directly in the database (including `audit_log`) that
+API-driven actions - and the on-disk file checksum - are indistinguishable
+from UI-driven ones. Submitted a real job via curl and polled
+`GET /api/v1/jobs/{id}` until it reported `completed`.
 
 ```bash
 pytest tests/test_api.py -v

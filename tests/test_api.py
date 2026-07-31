@@ -6,6 +6,9 @@ Repoints ai_wasteguard.db.SessionLocal's *bind* the same way
 tests/test_db.py does, so this genuinely exercises the app's own session
 configuration (expire_on_commit=False etc.) rather than a reimplementation.
 """
+import hashlib
+import time
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
@@ -276,3 +279,143 @@ def test_site_not_owned_returns_404(client):
 
     resp = client.get(f"/api/v1/sites/{site_id}/sampling-events", headers=_auth_headers(other_token))
     assert resp.status_code == 404
+
+
+def _create_sample_chain(client, token, project_id):
+    site_id = client.post(
+        f"/api/v1/projects/{project_id}/sites", json={"name": "Site A"}, headers=_auth_headers(token)
+    ).json()["id"]
+    event_id = client.post(
+        f"/api/v1/sites/{site_id}/sampling-events",
+        json={"collected_at": "2026-01-15T10:00:00Z"},
+        headers=_auth_headers(token),
+    ).json()["id"]
+    sample_id = client.post(
+        f"/api/v1/sampling-events/{event_id}/samples", json={"replicate": 1}, headers=_auth_headers(token)
+    ).json()["id"]
+    return sample_id
+
+
+def test_upload_via_api_matches_recorded_checksum(client):
+    _register(client)
+    token = _login(client).json()["access_token"]
+    project_id = _create_project(client, token)
+    sample_id = _create_sample_chain(client, token, project_id)
+
+    content = b"sample_id,value\n1,42\n"
+    resp = client.post(
+        f"/api/v1/samples/{sample_id}/uploads",
+        files={"file": ("counts.csv", content, "text/csv")},
+        headers=_auth_headers(token),
+    )
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["original_filename"] == "counts.csv"
+    assert body["size_bytes"] == len(content)
+    assert body["checksum_sha256"] == hashlib.sha256(content).hexdigest()
+
+    listing = client.get(f"/api/v1/samples/{sample_id}/uploads", headers=_auth_headers(token))
+    assert listing.status_code == 200
+    assert [u["id"] for u in listing.json()] == [body["id"]]
+
+
+def test_upload_rejects_unsupported_extension(client):
+    _register(client)
+    token = _login(client).json()["access_token"]
+    project_id = _create_project(client, token)
+    sample_id = _create_sample_chain(client, token, project_id)
+
+    resp = client.post(
+        f"/api/v1/samples/{sample_id}/uploads",
+        files={"file": ("malware.exe", b"data", "application/octet-stream")},
+        headers=_auth_headers(token),
+    )
+    assert resp.status_code == 400
+
+
+def test_upload_to_sample_not_owned_returns_404(client):
+    _register(client, email="owner@example.com")
+    owner_token = _login(client, email="owner@example.com").json()["access_token"]
+    project_id = _create_project(client, owner_token)
+    sample_id = _create_sample_chain(client, owner_token, project_id)
+
+    _register(client, email="other@example.com")
+    other_token = _login(client, email="other@example.com").json()["access_token"]
+
+    resp = client.post(
+        f"/api/v1/samples/{sample_id}/uploads",
+        files={"file": ("counts.csv", b"data", "text/csv")},
+        headers=_auth_headers(other_token),
+    )
+    assert resp.status_code == 404
+
+
+def test_upload_role_denied_after_demotion(client):
+    _register(client, role="researcher", email="owner@example.com")
+    owner_token = _login(client, email="owner@example.com").json()["access_token"]
+    project_id = _create_project(client, owner_token)
+    sample_id = _create_sample_chain(client, owner_token, project_id)
+
+    _set_role("owner@example.com", "student")
+
+    resp = client.post(
+        f"/api/v1/samples/{sample_id}/uploads",
+        files={"file": ("counts.csv", b"data", "text/csv")},
+        headers=_auth_headers(owner_token),
+    )
+    assert resp.status_code == 403
+
+
+def test_submit_job_via_api_and_poll_to_completion(client):
+    _register(client)
+    token = _login(client).json()["access_token"]
+    project_id = _create_project(client, token)
+
+    submit = client.post(
+        f"/api/v1/projects/{project_id}/jobs", json={}, headers=_auth_headers(token)
+    )
+    assert submit.status_code == 201
+    job = submit.json()
+    assert job["status"] == "queued"
+    job_id = job["id"]
+
+    final_status = None
+    for _ in range(60):
+        time.sleep(1)
+        job = client.get(f"/api/v1/jobs/{job_id}", headers=_auth_headers(token)).json()
+        if job["status"] in ("completed", "failed"):
+            final_status = job["status"]
+            break
+    assert final_status == "completed", f"job did not complete in time: {job}"
+    assert job["error_message"] is None
+
+    listing = client.get(f"/api/v1/projects/{project_id}/jobs", headers=_auth_headers(token)).json()
+    assert [j["id"] for j in listing] == [job_id]
+
+
+def test_job_not_owned_returns_404(client):
+    _register(client, email="owner@example.com")
+    owner_token = _login(client, email="owner@example.com").json()["access_token"]
+    project_id = _create_project(client, owner_token)
+    job_id = client.post(
+        f"/api/v1/projects/{project_id}/jobs", json={}, headers=_auth_headers(owner_token)
+    ).json()["id"]
+
+    _register(client, email="other@example.com")
+    other_token = _login(client, email="other@example.com").json()["access_token"]
+
+    resp = client.get(f"/api/v1/jobs/{job_id}", headers=_auth_headers(other_token))
+    assert resp.status_code == 404
+
+
+def test_job_submission_role_denied_after_demotion(client):
+    _register(client, role="researcher", email="owner@example.com")
+    owner_token = _login(client, email="owner@example.com").json()["access_token"]
+    project_id = _create_project(client, owner_token)
+
+    _set_role("owner@example.com", "student")
+
+    resp = client.post(
+        f"/api/v1/projects/{project_id}/jobs", json={}, headers=_auth_headers(owner_token)
+    )
+    assert resp.status_code == 403
