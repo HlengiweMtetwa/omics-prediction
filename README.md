@@ -117,6 +117,13 @@ canonical authentication, independent of the demo scripts above.
   evaluation metrics), writes it to disk, and records a SHA-256 content
   hash in the `Report` row. All user-supplied text (project title,
   description, filenames) is HTML-escaped before being embedded.
+- **Model registry**: `ai_wasteguard/model_registry.py` — turns a
+  *completed* job's artefact into a tracked `MLModel` row (algorithm,
+  target variable, metrics, artefact path, standard intended-use/
+  prohibited-use text). Registration is rejected for any job that isn't
+  COMPLETED or whose artefact is missing - never silently accepted. New
+  models start in `draft`; only `Administrator` can `approve` one
+  (`permissions.CAN_APPROVE_MODELS`).
 
 Session note: `ai_wasteguard/db.py`'s `SessionLocal` is configured with
 `expire_on_commit=False`. Every service in this layer follows the pattern
@@ -133,16 +140,16 @@ Setup:
 ```bash
 pip install -r requirements.txt
 alembic upgrade head        # creates instance/app.db and applies schema
-pytest tests/test_auth.py tests/test_models.py tests/test_registry.py tests/test_uploads.py tests/test_audit_and_permissions.py tests/test_jobs.py tests/test_reports.py tests/test_db.py -v
+pytest tests/test_auth.py tests/test_models.py tests/test_registry.py tests/test_uploads.py tests/test_audit_and_permissions.py tests/test_jobs.py tests/test_reports.py tests/test_db.py tests/test_model_registry.py -v
 ```
 
-## Registry + upload + pipelines + reports app (`Home.py`)
+## Registry + upload + pipelines + reports + models app (`Home.py`)
 
 A separate Streamlit app (independent of `streamlit_dashboard.py`) exposing
 the persistence layer above through a UI: registration/login, project → site
 → sampling event → sample registration, file upload against a specific
-sample, pipeline job submission/history, and report generation per
-project - each scoped to the logged-in user.
+sample, pipeline job submission/history, report generation, and model
+registration/approval per project - each scoped to the logged-in user.
 
 ```bash
 pip install -r requirements.txt
@@ -151,19 +158,20 @@ streamlit run Home.py
 ```
 
 Pages call `ai_wasteguard.registry`/`ai_wasteguard.auth`/`ai_wasteguard.uploads`/
-`ai_wasteguard.jobs`/`ai_wasteguard.reports` rather than querying the
-database or filesystem directly (`app_state.py` is the thin Streamlit-session
-glue). Verified end-to-end in a real headless browser (Playwright): register
-→ log in → create project → create site → create sampling event → create
-sample → upload a file → see it listed, with the on-disk checksum
-independently confirmed against the DB record; submit a pipeline job →
-watch it move to `completed` → see real evaluation metrics rendered from
-the job's own output directory; generate a report → preview it inline →
-download it, with the downloaded file's hash independently confirmed
-against the DB record. Also verified that a self-registered `Viewer`
-account cannot see or use the "create project" form, while a `Researcher`
-account can — confirming the permission policy is actually enforced, not just
-defined.
+`ai_wasteguard.jobs`/`ai_wasteguard.reports`/`ai_wasteguard.model_registry`
+rather than querying the database or filesystem directly (`app_state.py` is
+the thin Streamlit-session glue). Verified end-to-end in a real headless
+browser (Playwright): register → log in → create project → create site →
+create sampling event → create sample → upload a file → see it listed, with
+the on-disk checksum independently confirmed against the DB record; submit a
+pipeline job → watch it move to `completed` → see real evaluation metrics
+rendered from the job's own output directory; register a model from that
+job → see it listed as `draft` with the real metrics attached; confirmed a
+self-registered `Researcher` account (not an Administrator) correctly
+cannot see an "Approve" button on that model. Also verified that a
+self-registered `Viewer` account cannot see or use the "create project"
+form, while a `Researcher` account can — confirming the permission policy
+is actually enforced, not just defined.
 
 ## Roadmap
 

@@ -223,3 +223,38 @@ class Report(Base):
 
     project: Mapped["Project"] = relationship()
     generator: Mapped["User"] = relationship()
+
+
+class ModelApprovalStatus(str, enum.Enum):
+    DRAFT = "draft"
+    APPROVED = "approved"
+    DEPRECATED = "deprecated"
+
+
+class MLModel(Base):
+    """A registered model artefact produced by a completed PipelineJob.
+    Named MLModel (not Model) to avoid confusion with the ORM base class
+    naming convention used throughout this module."""
+
+    __tablename__ = "ml_models"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"))
+    job_id: Mapped[str] = mapped_column(ForeignKey("pipeline_jobs.id"))
+    name: Mapped[str] = mapped_column(String(255))
+    algorithm: Mapped[str] = mapped_column(String(100))
+    target_variable: Mapped[str] = mapped_column(String(100))
+    metrics: Mapped[str | None] = mapped_column(Text, nullable=True)
+    artifact_path: Mapped[str] = mapped_column(String(500))
+    intended_use: Mapped[str] = mapped_column(Text)
+    prohibited_use: Mapped[str] = mapped_column(Text)
+    approval_status: Mapped[ModelApprovalStatus] = mapped_column(
+        Enum(ModelApprovalStatus), default=ModelApprovalStatus.DRAFT
+    )
+    registered_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    approved_by: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    project: Mapped["Project"] = relationship()
+    job: Mapped["PipelineJob"] = relationship()
