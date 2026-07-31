@@ -9,6 +9,7 @@ from ai_wasteguard.models import UserRole
 CAN_CREATE_PROJECT = {UserRole.ADMINISTRATOR, UserRole.RESEARCHER}
 CAN_MANAGE_SITES_AND_SAMPLING = {UserRole.ADMINISTRATOR, UserRole.RESEARCHER, UserRole.LABORATORY_SCIENTIST}
 CAN_UPLOAD = {UserRole.ADMINISTRATOR, UserRole.RESEARCHER, UserRole.LABORATORY_SCIENTIST}
+CAN_RUN_PIPELINES = {UserRole.ADMINISTRATOR, UserRole.RESEARCHER, UserRole.LABORATORY_SCIENTIST}
 
 # Roles a user may self-select at registration. Administrator is granted
 # out-of-band (e.g. direct DB/admin action), never via self-registration.
