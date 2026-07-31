@@ -52,5 +52,59 @@ class ProjectResponse(BaseModel):
     created_at: datetime
 
 
+class SiteCreateRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=255)
+    country: str | None = None
+    region: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    site_type: str | None = None
+
+
+class SiteResponse(BaseModel):
+    id: str
+    project_id: str
+    name: str
+    country: str | None
+    region: str | None
+    latitude: float | None
+    longitude: float | None
+    site_type: str | None
+    created_at: datetime
+
+
+class SamplingEventCreateRequest(BaseModel):
+    collected_at: datetime
+    sample_matrix: str | None = None
+    collector: str | None = None
+    notes: str | None = None
+
+
+class SamplingEventResponse(BaseModel):
+    id: str
+    site_id: str
+    collected_at: datetime
+    sample_matrix: str | None
+    collector: str | None
+    notes: str | None
+    created_at: datetime
+
+
+class SampleCreateRequest(BaseModel):
+    sample_type: str | None = None
+    replicate: int = Field(default=1, ge=1)
+    lab_identifier: str | None = None
+
+
+class SampleResponse(BaseModel):
+    id: str
+    sampling_event_id: str
+    sample_type: str | None
+    replicate: int
+    lab_identifier: str | None
+    analysis_status: str
+    created_at: datetime
+
+
 class ErrorResponse(BaseModel):
     detail: str

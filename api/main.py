@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from api.routers import auth, projects
+from api.routers import auth, projects, sites_and_sampling
 
 logger = logging.getLogger("ai_wasteguard.api")
 
@@ -38,6 +38,7 @@ if _allowed_origins:
 
 app.include_router(auth.router)
 app.include_router(projects.router)
+app.include_router(sites_and_sampling.router)
 
 
 @app.exception_handler(Exception)

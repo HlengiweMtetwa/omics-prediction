@@ -8,9 +8,10 @@ configuration (expire_on_commit=False etc.) rather than a reimplementation.
 """
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 
 from ai_wasteguard import db
+from ai_wasteguard.models import User, UserRole
 
 
 @pytest.fixture()
@@ -140,4 +141,138 @@ def test_project_not_owned_returns_404_not_403(client):
     other_token = _login(client, email="other@example.com").json()["access_token"]
 
     resp = client.get(f"/api/v1/projects/{project_id}", headers=_auth_headers(other_token))
+    assert resp.status_code == 404
+
+
+def _create_project(client, token, title="Pilot"):
+    resp = client.post("/api/v1/projects", json={"title": title}, headers=_auth_headers(token))
+    assert resp.status_code == 201
+    return resp.json()["id"]
+
+
+def test_full_site_event_sample_chain_via_api(client):
+    _register(client)
+    token = _login(client).json()["access_token"]
+    project_id = _create_project(client, token)
+
+    site_resp = client.post(
+        f"/api/v1/projects/{project_id}/sites",
+        json={"name": "Site A", "country": "South Africa"},
+        headers=_auth_headers(token),
+    )
+    assert site_resp.status_code == 201
+    site_id = site_resp.json()["id"]
+    assert site_resp.json()["project_id"] == project_id
+
+    sites_list = client.get(f"/api/v1/projects/{project_id}/sites", headers=_auth_headers(token))
+    assert sites_list.status_code == 200
+    assert [s["id"] for s in sites_list.json()] == [site_id]
+
+    event_resp = client.post(
+        f"/api/v1/sites/{site_id}/sampling-events",
+        json={"collected_at": "2026-01-15T10:00:00Z", "sample_matrix": "influent"},
+        headers=_auth_headers(token),
+    )
+    assert event_resp.status_code == 201
+    event_id = event_resp.json()["id"]
+
+    events_list = client.get(f"/api/v1/sites/{site_id}/sampling-events", headers=_auth_headers(token))
+    assert [e["id"] for e in events_list.json()] == [event_id]
+
+    sample_resp = client.post(
+        f"/api/v1/sampling-events/{event_id}/samples",
+        json={"sample_type": "composite", "replicate": 1, "lab_identifier": "LAB-001"},
+        headers=_auth_headers(token),
+    )
+    assert sample_resp.status_code == 201
+    sample_id = sample_resp.json()["id"]
+    assert sample_resp.json()["analysis_status"] == "pending"
+
+    samples_list = client.get(f"/api/v1/sampling-events/{event_id}/samples", headers=_auth_headers(token))
+    assert [s["id"] for s in samples_list.json()] == [sample_id]
+
+
+def test_duplicate_replicate_returns_409(client):
+    _register(client)
+    token = _login(client).json()["access_token"]
+    project_id = _create_project(client, token)
+    site_id = client.post(
+        f"/api/v1/projects/{project_id}/sites", json={"name": "Site A"}, headers=_auth_headers(token)
+    ).json()["id"]
+    event_id = client.post(
+        f"/api/v1/sites/{site_id}/sampling-events",
+        json={"collected_at": "2026-01-15T10:00:00Z"},
+        headers=_auth_headers(token),
+    ).json()["id"]
+
+    first = client.post(
+        f"/api/v1/sampling-events/{event_id}/samples", json={"replicate": 1}, headers=_auth_headers(token)
+    )
+    assert first.status_code == 201
+
+    second = client.post(
+        f"/api/v1/sampling-events/{event_id}/samples", json={"replicate": 1}, headers=_auth_headers(token)
+    )
+    assert second.status_code == 409
+
+
+def test_non_owner_creating_site_gets_404_not_403(client):
+    """Ownership (404) is checked before role (403) - consistent with not
+    leaking project existence to someone who can't see it, even when they'd
+    also fail the role check."""
+    _register(client, role="researcher", email="owner@example.com")
+    owner_token = _login(client, email="owner@example.com").json()["access_token"]
+    project_id = _create_project(client, owner_token)
+
+    _register(client, role="viewer", email="viewer@example.com")
+    viewer_token = _login(client, email="viewer@example.com").json()["access_token"]
+
+    resp = client.post(
+        f"/api/v1/projects/{project_id}/sites", json={"name": "Should not be created"}, headers=_auth_headers(viewer_token)
+    )
+    assert resp.status_code == 404
+
+
+def _set_role(email: str, role_value: str) -> None:
+    with db.get_session() as session:
+        user = session.execute(select(User).where(User.email == email)).scalar_one()
+        user.role = UserRole(role_value)
+
+
+def test_role_denied_creating_site_on_a_project_the_caller_owns(client):
+    """Isolates the 403 (role) branch from the 404 (ownership) branch
+    tested elsewhere: every self-registerable role that can own a project
+    (only Researcher) also happens to be permitted to manage sites, so this
+    combination can't arise through ordinary registration - reached here by
+    directly demoting the owner's role after project creation, same as a
+    real admin might reassign someone from Researcher to Student."""
+    _register(client, role="researcher", email="owner@example.com")
+    owner_token = _login(client, email="owner@example.com").json()["access_token"]
+    project_id = _create_project(client, owner_token)
+
+    resp = client.post(
+        f"/api/v1/projects/{project_id}/sites", json={"name": "Should be created"}, headers=_auth_headers(owner_token)
+    )
+    assert resp.status_code == 201  # sanity: still Researcher, still allowed
+
+    _set_role("owner@example.com", "student")
+
+    resp2 = client.post(
+        f"/api/v1/projects/{project_id}/sites", json={"name": "Should not be created"}, headers=_auth_headers(owner_token)
+    )
+    assert resp2.status_code == 403
+
+
+def test_site_not_owned_returns_404(client):
+    _register(client, email="owner@example.com")
+    owner_token = _login(client, email="owner@example.com").json()["access_token"]
+    project_id = _create_project(client, owner_token)
+    site_id = client.post(
+        f"/api/v1/projects/{project_id}/sites", json={"name": "Site A"}, headers=_auth_headers(owner_token)
+    ).json()["id"]
+
+    _register(client, email="other@example.com")
+    other_token = _login(client, email="other@example.com").json()["access_token"]
+
+    resp = client.get(f"/api/v1/sites/{site_id}/sampling-events", headers=_auth_headers(other_token))
     assert resp.status_code == 404

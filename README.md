@@ -72,9 +72,9 @@ pytest tests/ -v
   `models/random_forest_model.pkl` and `results/` outputs reflect the most
   recent pipeline run and will go stale if the code changes without
   re-running the pipeline.
-- The API (`api/`) only covers auth and projects so far - sites, samples,
-  uploads, jobs, reports and models are only reachable through the
-  Streamlit UI for now. No rate limiting is implemented despite
+- The API (`api/`) covers auth, projects, sites, sampling events and
+  samples; uploads, jobs, reports and models are only reachable through
+  the Streamlit UI for now. No rate limiting is implemented despite
   `ACCOUNT_LOCKOUT_*` existing at the auth-service level.
 
 ## Persistence and authentication (`ai_wasteguard/`)
@@ -177,10 +177,19 @@ log, and vice versa, because both go through `ai_wasteguard.auth` /
   `app_state.py` - `POST /api/v1/auth/register`, `POST /api/v1/auth/login`
   (returns a bearer token), `GET /api/v1/auth/me`.
 - `GET/POST /api/v1/projects`, `GET /api/v1/projects/{id}` - the same
-  RBAC as the UI (`permissions.CAN_CREATE_PROJECT`), and requesting a
-  project you don't own returns 404, not 403 - deliberately, so the API
-  doesn't confirm a project id exists to someone who can't see it (same
-  principle as the enumeration-safe login error).
+  RBAC as the UI (`permissions.CAN_CREATE_PROJECT`).
+- `GET/POST /api/v1/projects/{project_id}/sites`,
+  `GET/POST /api/v1/sites/{site_id}/sampling-events`,
+  `GET/POST /api/v1/sampling-events/{event_id}/samples` - nested the same
+  way the registry actually is, each authorization-checked up the whole
+  chain (a sample's event's site's project must be owned by the caller).
+  A duplicate replicate for the same sampling event returns 409, not 500.
+- Requesting (or mutating) a resource you don't own returns 404, not
+  403 - deliberately, at every level of the chain, so the API never
+  confirms a resource id exists to someone who can't see it (same
+  principle as the enumeration-safe login error). Ownership is checked
+  *before* role, so a non-owner gets 404 even when they'd also fail the
+  role check - the stronger property wins.
 - Unhandled exceptions never reach the client as a stack trace - a
   global handler logs and returns a generic 500.
 - CORS is closed by default; set `CORS_ALLOWED_ORIGINS` to open it to
@@ -200,11 +209,12 @@ uvicorn api.main:app --reload
 
 Verified with real HTTP requests (curl against a running `uvicorn`
 process, not just FastAPI's in-process TestClient) covering the full
-register → login → authenticated create/list/get flow, all the negative
-cases (duplicate email, wrong password, missing/invalid token, a Viewer
-role rejected from creating a project, a non-owner requesting someone
-else's project id), and confirmed via the `audit_log` table that API-driven
-actions are indistinguishable from UI-driven ones.
+register → login → project → site → sampling event → sample chain, all
+the negative cases (duplicate email, wrong password, missing/invalid
+token, a Viewer role rejected from creating a project, a non-owner
+requesting someone else's project/site, a duplicate replicate returning
+409), and confirmed directly in the database (including `audit_log`) that
+API-driven actions are indistinguishable from UI-driven ones.
 
 ```bash
 pytest tests/test_api.py -v
