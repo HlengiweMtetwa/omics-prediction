@@ -14,7 +14,7 @@ rule collect_data:
         "data/metabolite_features.csv",
         "data/metadata.csv"
     script:
-        "scripts/collect_data.py"
+        "collect_data.py"
 
 rule prepare_dataset:
     input:
@@ -25,7 +25,7 @@ rule prepare_dataset:
     output:
         "data/structured_dataset.csv"
     script:
-        "scripts/prepare_dataset.py"
+        "prepare_dataset.py"
 
 rule train_model:
     input:
@@ -36,4 +36,4 @@ rule train_model:
         "results/feature_importance.png",
         "models/random_forest_model.pkl"
     script:
-        "scripts/train_model.py"
+        "train_model.py"
