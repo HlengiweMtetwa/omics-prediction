@@ -136,3 +136,34 @@ class Sample(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     sampling_event: Mapped["SamplingEvent"] = relationship(back_populates="samples")
+    uploaded_files: Mapped[list["UploadedFile"]] = relationship(
+        back_populates="sample", cascade="all, delete-orphan"
+    )
+
+
+class UploadValidationStatus(str, enum.Enum):
+    PENDING = "pending"
+    VALID = "valid"
+    INVALID = "invalid"
+
+
+class UploadedFile(Base):
+    __tablename__ = "uploaded_files"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    sample_id: Mapped[str] = mapped_column(ForeignKey("samples.id"))
+    uploader_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    original_filename: Mapped[str] = mapped_column(String(255))
+    storage_key: Mapped[str] = mapped_column(String(255), unique=True)
+    file_type: Mapped[str] = mapped_column(String(20))
+    omics_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    size_bytes: Mapped[int] = mapped_column()
+    checksum_sha256: Mapped[str] = mapped_column(String(64))
+    validation_status: Mapped[UploadValidationStatus] = mapped_column(
+        Enum(UploadValidationStatus), default=UploadValidationStatus.PENDING
+    )
+    validation_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+    sample: Mapped["Sample"] = relationship(back_populates="uploaded_files")
+    uploader: Mapped["User"] = relationship()
