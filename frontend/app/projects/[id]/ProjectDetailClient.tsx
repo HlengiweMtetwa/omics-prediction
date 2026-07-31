@@ -2,14 +2,17 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
-import { useRequireAuth } from "@/lib/auth-context";
+import { useAuth, useRequireAuth } from "@/lib/auth-context";
 import { api, ApiError, Project, Site } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import SiteSection from "@/components/SiteSection";
 import JobsSection from "@/components/JobsSection";
+import ReportsSection from "@/components/ReportsSection";
+import ModelsSection from "@/components/ModelsSection";
 
 export default function ProjectDetailClient({ projectId }: { projectId: string }) {
   const { token, loading: authLoading } = useRequireAuth();
+  const { user } = useAuth();
   const [project, setProject] = useState<Project | null>(null);
   const [sites, setSites] = useState<Site[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -210,6 +213,8 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
       )}
 
       <JobsSection token={token} projectId={projectId} />
+      <ReportsSection token={token} projectId={projectId} />
+      <ModelsSection token={token} projectId={projectId} userRole={user?.role || ""} />
     </AppShell>
   );
 }

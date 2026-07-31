@@ -393,6 +393,19 @@ def test_submit_job_via_api_and_poll_to_completion(client):
     assert [j["id"] for j in listing] == [job_id]
 
 
+def _create_completed_job(client, token, project_id):
+    job_id = client.post(
+        f"/api/v1/projects/{project_id}/jobs", json={}, headers=_auth_headers(token)
+    ).json()["id"]
+    for _ in range(60):
+        time.sleep(1)
+        job = client.get(f"/api/v1/jobs/{job_id}", headers=_auth_headers(token)).json()
+        if job["status"] in ("completed", "failed"):
+            assert job["status"] == "completed", f"job did not complete: {job}"
+            return job_id
+    raise AssertionError("job did not reach a terminal state in time")
+
+
 def test_job_not_owned_returns_404(client):
     _register(client, email="owner@example.com")
     owner_token = _login(client, email="owner@example.com").json()["access_token"]
@@ -457,3 +470,104 @@ def test_dashboard_scoped_to_caller_only(client):
 
     other_summary = client.get("/api/v1/dashboard", headers=_auth_headers(other_token)).json()
     assert other_summary["active_projects"] == 0
+
+
+def test_generate_and_read_report_via_api(client):
+    _register(client)
+    token = _login(client).json()["access_token"]
+    project_id = _create_project(client, token)
+    client.post(f"/api/v1/projects/{project_id}/sites", json={"name": "Site A"}, headers=_auth_headers(token))
+
+    generate = client.post(f"/api/v1/projects/{project_id}/reports", headers=_auth_headers(token))
+    assert generate.status_code == 201
+    report = generate.json()
+    assert report["project_id"] == project_id
+    assert report["report_type"] == "project_summary"
+
+    listing = client.get(f"/api/v1/projects/{project_id}/reports", headers=_auth_headers(token))
+    assert [r["id"] for r in listing.json()] == [report["id"]]
+
+    content = client.get(f"/api/v1/reports/{report['id']}/content", headers=_auth_headers(token))
+    assert content.status_code == 200
+    assert "Site A" in content.text
+    assert "Project summary report" in content.text
+
+
+def test_report_not_owned_returns_404(client):
+    _register(client, email="owner@example.com")
+    owner_token = _login(client, email="owner@example.com").json()["access_token"]
+    project_id = _create_project(client, owner_token)
+    report_id = client.post(
+        f"/api/v1/projects/{project_id}/reports", headers=_auth_headers(owner_token)
+    ).json()["id"]
+
+    _register(client, email="other@example.com")
+    other_token = _login(client, email="other@example.com").json()["access_token"]
+
+    resp = client.get(f"/api/v1/reports/{report_id}/content", headers=_auth_headers(other_token))
+    assert resp.status_code == 404
+
+
+def test_register_and_approve_model_via_api(client):
+    _register(client, role="researcher", email="owner@example.com")
+    owner_token = _login(client, email="owner@example.com").json()["access_token"]
+    project_id = _create_project(client, owner_token)
+    job_id = _create_completed_job(client, owner_token, project_id)
+
+    register = client.post(
+        f"/api/v1/projects/{project_id}/models",
+        json={"job_id": job_id, "name": "RF-baseline"},
+        headers=_auth_headers(owner_token),
+    )
+    assert register.status_code == 201
+    model = register.json()
+    assert model["approval_status"] == "draft"
+    assert model["name"] == "RF-baseline"
+    model_id = model["id"]
+
+    listing = client.get(f"/api/v1/projects/{project_id}/models", headers=_auth_headers(owner_token))
+    assert [m["id"] for m in listing.json()] == [model_id]
+
+    # Researcher (not Administrator) cannot approve.
+    denied = client.post(f"/api/v1/models/{model_id}/approve", headers=_auth_headers(owner_token))
+    assert denied.status_code == 403
+
+    _set_role("owner@example.com", "administrator")
+    approve = client.post(f"/api/v1/models/{model_id}/approve", headers=_auth_headers(owner_token))
+    assert approve.status_code == 200
+    assert approve.json()["approval_status"] == "approved"
+    assert approve.json()["approved_by"] is not None
+
+
+def test_register_model_from_job_in_another_project_returns_404(client):
+    _register(client, email="owner@example.com")
+    owner_token = _login(client, email="owner@example.com").json()["access_token"]
+    project_a = _create_project(client, owner_token, title="Project A")
+    project_b = _create_project(client, owner_token, title="Project B")
+    job_id = _create_completed_job(client, owner_token, project_a)
+
+    resp = client.post(
+        f"/api/v1/projects/{project_b}/models",
+        json={"job_id": job_id},
+        headers=_auth_headers(owner_token),
+    )
+    assert resp.status_code == 404
+
+
+def test_model_not_owned_cannot_be_approved(client):
+    _register(client, role="researcher", email="owner@example.com")
+    owner_token = _login(client, email="owner@example.com").json()["access_token"]
+    project_id = _create_project(client, owner_token)
+    job_id = _create_completed_job(client, owner_token, project_id)
+    model_id = client.post(
+        f"/api/v1/projects/{project_id}/models",
+        json={"job_id": job_id},
+        headers=_auth_headers(owner_token),
+    ).json()["id"]
+
+    _register(client, role="researcher", email="other@example.com")
+    other_token = _login(client, email="other@example.com").json()["access_token"]
+    _set_role("other@example.com", "administrator")
+
+    resp = client.post(f"/api/v1/models/{model_id}/approve", headers=_auth_headers(other_token))
+    assert resp.status_code == 404

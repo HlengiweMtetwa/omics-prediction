@@ -73,9 +73,8 @@ pytest tests/ -v
   recent pipeline run and will go stale if the code changes without
   re-running the pipeline.
 - The API (`api/`) covers auth, projects, sites, sampling events, samples,
-  uploads and jobs; reports and models are only reachable through the
-  Streamlit UI for now. No rate limiting is implemented despite
-  `ACCOUNT_LOCKOUT_*` existing at the auth-service level.
+  uploads, jobs, reports, and models. No rate limiting is implemented
+  despite `ACCOUNT_LOCKOUT_*` existing at the auth-service level.
 
 ## Persistence and authentication (`ai_wasteguard/`)
 
@@ -195,6 +194,17 @@ log, and vice versa, because both go through `ai_wasteguard.auth` /
   the background thread opens its own DB session, and waiting for
   FastAPI's normal request-teardown commit would let it race a read of a
   row that isn't durably visible yet.
+- `GET/POST /api/v1/projects/{project_id}/reports`,
+  `GET /api/v1/reports/{id}/content` (returns the report's HTML body) -
+  same `ai_wasteguard.reports.generate_project_summary_report` the
+  Streamlit Reports page calls.
+- `GET/POST /api/v1/projects/{project_id}/models`,
+  `POST /api/v1/models/{id}/approve` - registering a model validates the
+  referenced job both belongs to the given project and is `completed`
+  (a job from a different project the caller owns returns 404, not a
+  silent cross-project registration); approval is gated to the
+  Administrator role (`permissions.CAN_APPROVE_MODELS`), checked after
+  ownership so a non-owner still gets 404.
 - Requesting (or mutating) a resource you don't own returns 404, not
   403 - deliberately, at every level of the chain, so the API never
   confirms a resource id exists to someone who can't see it (same
@@ -228,7 +238,10 @@ returning 409, an unsupported file extension returning 400), and
 confirmed directly in the database (including `audit_log`) that
 API-driven actions - and the on-disk file checksum - are indistinguishable
 from UI-driven ones. Submitted a real job via curl and polled
-`GET /api/v1/jobs/{id}` until it reported `completed`.
+`GET /api/v1/jobs/{id}` until it reported `completed`, then generated a
+report and fetched its content, and registered + approved a model from
+that completed job (verifying the cross-project-job and non-Administrator
+rejection paths).
 
 ```bash
 pytest tests/test_api.py -v
@@ -240,10 +253,11 @@ A Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 client for
 the FastAPI backend above, covering registration, login, the dashboard
 (`GET /api/v1/dashboard`), project listing/creation, and a project detail
 page with nested site → sampling event → sample → file upload creation and
-drilldown, plus pipeline job submission with live polling to completion.
-It's the beginning of a full frontend replacing the Streamlit registry app
-one page at a time — for now, Reports and Models are still only reachable
-through `Home.py`.
+drilldown, pipeline job submission with live polling to completion, report
+generation/preview/download, and model registration/approval. This brings
+the frontend to full functional parity with the Streamlit registry app's
+per-project surface (`Home.py` remains available as an alternative UI over
+the same backend).
 
 ```bash
 cd frontend
@@ -272,7 +286,14 @@ status (not client-guessed) rendered afterward; submit a pipeline job → the
 page polls `GET /api/v1/jobs/{id}` and the status badge moves from
 `queued`/`running` to `completed` as the real background job (the same
 `threading.Thread`-executed pipeline the API layer runs) finishes, not a
-client-side timer fake; no crashes or console errors along the way.
+client-side timer fake; register a model from that completed job → its
+draft badge and the role-gated "Requires Administrator" message render
+correctly for a Researcher account; generate a report → preview it in an
+iframe showing the real generated HTML, and download it as a file; promote
+the account to Administrator through the real `scripts/create_admin.py`
+bootstrap script (a subprocess against the live database, not a UI
+shortcut), log back in, and approve the model - the badge updates to
+`approved`; no crashes or console errors along the way.
 
 Colors, spacing, and status indicators follow a validated categorical/status
 palette (`app/globals.css`), with light/dark variants selected by both the OS

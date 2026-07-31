@@ -147,6 +147,41 @@ export interface Upload {
   created_at: string;
 }
 
+export interface Report {
+  id: string;
+  project_id: string;
+  report_type: string;
+  content_hash: string;
+  created_at: string;
+}
+
+export interface MLModel {
+  id: string;
+  project_id: string;
+  job_id: string;
+  name: string;
+  algorithm: string;
+  target_variable: string;
+  metrics: string | null;
+  intended_use: string;
+  prohibited_use: string;
+  approval_status: string;
+  registered_by: string;
+  approved_by: string | null;
+  created_at: string;
+  approved_at: string | null;
+}
+
+async function requestText(path: string, token: string): Promise<string> {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    throw new ApiError(res.status, `Request failed with status ${res.status}`);
+  }
+  return res.text();
+}
+
 export const api = {
   register: (payload: {
     full_name: string;
@@ -257,6 +292,28 @@ export const api = {
     }),
 
   getJob: (token: string, jobId: string) => request<Job>(`/api/v1/jobs/${jobId}`, { token }),
+
+  listReports: (token: string, projectId: string) =>
+    request<Report[]>(`/api/v1/projects/${projectId}/reports`, { token }),
+
+  createReport: (token: string, projectId: string) =>
+    request<Report>(`/api/v1/projects/${projectId}/reports`, { method: "POST", token }),
+
+  getReportContent: (token: string, reportId: string) =>
+    requestText(`/api/v1/reports/${reportId}/content`, token),
+
+  listModels: (token: string, projectId: string) =>
+    request<MLModel[]>(`/api/v1/projects/${projectId}/models`, { token }),
+
+  registerModel: (token: string, projectId: string, payload: { job_id: string; name?: string }) =>
+    request<MLModel>(`/api/v1/projects/${projectId}/models`, {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  approveModel: (token: string, modelId: string) =>
+    request<MLModel>(`/api/v1/models/${modelId}/approve`, { method: "POST", token }),
 
   listUploads: (token: string, sampleId: string) =>
     request<Upload[]>(`/api/v1/samples/${sampleId}/uploads`, { token }),

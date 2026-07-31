@@ -133,6 +133,36 @@ class JobResponse(BaseModel):
     completed_at: datetime | None
 
 
+class ReportResponse(BaseModel):
+    id: str
+    project_id: str
+    report_type: str
+    content_hash: str
+    created_at: datetime
+
+
+class ModelRegisterRequest(BaseModel):
+    job_id: str
+    name: str | None = None
+
+
+class ModelResponse(BaseModel):
+    id: str
+    project_id: str
+    job_id: str
+    name: str
+    algorithm: str
+    target_variable: str
+    metrics: str | None
+    intended_use: str
+    prohibited_use: str
+    approval_status: str
+    registered_by: str
+    approved_by: str | None
+    created_at: datetime
+    approved_at: datetime | None
+
+
 class ApprovedModelSummary(BaseModel):
     id: str
     name: str
