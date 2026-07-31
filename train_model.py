@@ -35,9 +35,9 @@ def train_and_evaluate():
     # Evaluation metrics
     metrics = {
         "Accuracy": accuracy_score(y_test, y_pred),
-        "Precision": precision_score(y_test, y_pred),
-        "Recall": recall_score(y_test, y_pred),
-        "F1-score": f1_score(y_test, y_pred)
+        "Precision": precision_score(y_test, y_pred, zero_division=0),
+        "Recall": recall_score(y_test, y_pred, zero_division=0),
+        "F1-score": f1_score(y_test, y_pred, zero_division=0)
     }
     
     # Save metrics to a file

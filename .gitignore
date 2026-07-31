@@ -1,2 +1,14 @@
 omics-prediction
 omics-prediction.pub
+
+# Pipeline-generated data (synthetic, regenerable via collect_data.py)
+data/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Local secrets / local database
+.env
+instance/
