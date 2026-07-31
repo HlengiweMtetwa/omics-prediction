@@ -1,7 +1,8 @@
 import streamlit as st
 
 import app_state
-from ai_wasteguard import auth, permissions
+from ai_wasteguard import auth, dashboard, permissions
+from ai_wasteguard.db import get_session
 
 st.set_page_config(page_title="AI-WasteGuard", layout="centered")
 
@@ -18,10 +19,40 @@ if not app_state.db_is_ready():
 if app_state.is_logged_in():
     st.success(f"Logged in as **{st.session_state['user_full_name']}** ({st.session_state['user_email']})")
     st.write(f"Role: `{st.session_state['user_role']}`")
-    st.write("Use the sidebar to open **Projects** or **Sites & Sampling**.")
     if st.button("Log out"):
         app_state.logout()
         st.rerun()
+
+    user_id = app_state.current_user_id()
+    with get_session() as session:
+        summary = dashboard.get_dashboard_summary(session, user_id)
+
+    st.subheader("Overview")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Active projects", summary.active_projects)
+    col2.metric("Sites", summary.sites)
+    col3.metric("Samples", summary.samples)
+
+    st.subheader("Pipeline jobs")
+    jcol1, jcol2, jcol3, jcol4 = st.columns(4)
+    jcol1.metric("Queued", summary.jobs_queued)
+    jcol2.metric("Running", summary.jobs_running)
+    jcol3.metric("Completed", summary.jobs_completed)
+    jcol4.metric("Failed", summary.jobs_failed)
+
+    st.subheader(f"Approved models ({len(summary.approved_models)})")
+    if not summary.approved_models:
+        st.caption("None yet.")
+    for model in summary.approved_models:
+        st.write(f"✅ **{model.name}** — {model.algorithm}")
+
+    st.subheader("Recent activity")
+    if not summary.recent_activity:
+        st.caption("No activity yet.")
+    for event in summary.recent_activity:
+        st.caption(f"{event.created_at.isoformat()} — {event.action}" + (f" ({event.details})" if event.details else ""))
+
+    st.write("Use the sidebar to open **Projects**, **Sites and Sampling**, **Uploads**, **Pipelines**, **Reports**, or **Models**.")
 else:
     login_tab, register_tab = st.tabs(["Log in", "Register"])
 

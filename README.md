@@ -134,6 +134,12 @@ canonical authentication, independent of the demo scripts above.
   records an audit event with `actor_user_id=None` (an out-of-band
   operator action, not attributed to the promoted user as if they did it
   themselves).
+- **Dashboard**: `ai_wasteguard/dashboard.py` — aggregates active
+  projects/sites/samples, a pipeline job status breakdown (queued/running/
+  completed/failed), approved models, and recent audit activity, scoped
+  to the logged-in user's own data (verified isolation: another user's
+  projects never contribute to your counts). Rendered on `Home.py` after
+  login. Pure read aggregation - no new tables.
 
 Session note: `ai_wasteguard/db.py`'s `SessionLocal` is configured with
 `expire_on_commit=False`. Every service in this layer follows the pattern
@@ -150,7 +156,7 @@ Setup:
 ```bash
 pip install -r requirements.txt
 alembic upgrade head        # creates instance/app.db and applies schema
-pytest tests/test_auth.py tests/test_models.py tests/test_registry.py tests/test_uploads.py tests/test_audit_and_permissions.py tests/test_jobs.py tests/test_reports.py tests/test_db.py tests/test_model_registry.py tests/test_admin.py -v
+pytest tests/test_auth.py tests/test_models.py tests/test_registry.py tests/test_uploads.py tests/test_audit_and_permissions.py tests/test_jobs.py tests/test_reports.py tests/test_db.py tests/test_model_registry.py tests/test_admin.py tests/test_dashboard.py -v
 ```
 
 ## Registry + upload + pipelines + reports + models app (`Home.py`)
