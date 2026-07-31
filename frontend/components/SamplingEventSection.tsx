@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { api, ApiError, Sample, SamplingEvent } from "@/lib/api";
+import SampleRow from "./SampleRow";
 
 export default function SamplingEventSection({
   token,
@@ -155,26 +156,9 @@ export default function SamplingEventSection({
             </div>
           )}
           {samples && samples.length > 0 && (
-            <ul className="flex flex-col gap-1">
+            <ul className="flex flex-col gap-2">
               {samples.map((s) => (
-                <li key={s.id} className="text-sm flex items-center gap-2" style={{ color: "var(--text-secondary)" }}>
-                  <span
-                    className="text-xs font-mono px-1.5 py-0.5 rounded"
-                    style={{ background: "var(--page-plane)", color: "var(--text-secondary)" }}
-                  >
-                    rep {s.replicate}
-                  </span>
-                  {s.lab_identifier && <span>{s.lab_identifier}</span>}
-                  {s.sample_type && (
-                    <span style={{ color: "var(--text-muted)" }}>{s.sample_type}</span>
-                  )}
-                  <span
-                    className="text-xs ml-auto"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    {s.analysis_status}
-                  </span>
-                </li>
+                <SampleRow key={s.id} token={token} sample={s} />
               ))}
             </ul>
           )}

@@ -124,6 +124,18 @@ export interface Sample {
   created_at: string;
 }
 
+export interface Upload {
+  id: string;
+  sample_id: string;
+  original_filename: string;
+  file_type: string;
+  omics_type: string | null;
+  size_bytes: number;
+  checksum_sha256: string;
+  validation_status: string;
+  created_at: string;
+}
+
 export const api = {
   register: (payload: {
     full_name: string;
@@ -222,4 +234,18 @@ export const api = {
       token,
       body: JSON.stringify(payload),
     }),
+
+  listUploads: (token: string, sampleId: string) =>
+    request<Upload[]>(`/api/v1/samples/${sampleId}/uploads`, { token }),
+
+  createUpload: (token: string, sampleId: string, file: File, omicsType?: string) => {
+    const form = new FormData();
+    form.append("file", file);
+    const query = omicsType ? `?omics_type=${encodeURIComponent(omicsType)}` : "";
+    return request<Upload>(`/api/v1/samples/${sampleId}/uploads${query}`, {
+      method: "POST",
+      token,
+      body: form,
+    });
+  },
 };
