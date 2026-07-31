@@ -124,6 +124,16 @@ canonical authentication, independent of the demo scripts above.
   COMPLETED or whose artefact is missing - never silently accepted. New
   models start in `draft`; only `Administrator` can `approve` one
   (`permissions.CAN_APPROVE_MODELS`).
+- **Administrator bootstrap**: `ai_wasteguard/admin.py` +
+  `scripts/create_admin.py`. Administrator is deliberately excluded from
+  self-registration, but nothing else in the app could ever grant it -
+  which meant the model-approval feature above was functionally
+  unreachable in a real deployment. `python scripts/create_admin.py
+  user@example.com` promotes an *already-registered* user, is meant to be
+  run from a trusted environment (not exposed through the web app), and
+  records an audit event with `actor_user_id=None` (an out-of-band
+  operator action, not attributed to the promoted user as if they did it
+  themselves).
 
 Session note: `ai_wasteguard/db.py`'s `SessionLocal` is configured with
 `expire_on_commit=False`. Every service in this layer follows the pattern
@@ -140,7 +150,7 @@ Setup:
 ```bash
 pip install -r requirements.txt
 alembic upgrade head        # creates instance/app.db and applies schema
-pytest tests/test_auth.py tests/test_models.py tests/test_registry.py tests/test_uploads.py tests/test_audit_and_permissions.py tests/test_jobs.py tests/test_reports.py tests/test_db.py tests/test_model_registry.py -v
+pytest tests/test_auth.py tests/test_models.py tests/test_registry.py tests/test_uploads.py tests/test_audit_and_permissions.py tests/test_jobs.py tests/test_reports.py tests/test_db.py tests/test_model_registry.py tests/test_admin.py -v
 ```
 
 ## Registry + upload + pipelines + reports + models app (`Home.py`)
@@ -166,12 +176,25 @@ create sampling event → create sample → upload a file → see it listed, wit
 the on-disk checksum independently confirmed against the DB record; submit a
 pipeline job → watch it move to `completed` → see real evaluation metrics
 rendered from the job's own output directory; register a model from that
-job → see it listed as `draft` with the real metrics attached; confirmed a
-self-registered `Researcher` account (not an Administrator) correctly
-cannot see an "Approve" button on that model. Also verified that a
-self-registered `Viewer` account cannot see or use the "create project"
-form, while a `Researcher` account can — confirming the permission policy
-is actually enforced, not just defined.
+job → see it listed as `draft` with the real metrics attached, with no
+"Approve" button visible to that (self-registered, non-admin) account →
+promote the account to Administrator with a real invocation of
+`scripts/create_admin.py` as a subprocess against the live database → log
+back in and confirm the role change took effect, the "Approve" button is
+now present, clicking it updates the status badge to `approved` and the
+button disappears. Also verified that a self-registered `Viewer` account
+cannot see or use the "create project" form, while a `Researcher` account
+can — confirming the permission policy is actually enforced end-to-end
+across a role change, not just defined.
+
+## Bootstrapping the first Administrator
+
+1. Register normally through the app (any self-registerable role - the
+   role picker doesn't matter, it will be overwritten).
+2. From a trusted environment with access to the deployment's database:
+   `python scripts/create_admin.py <their-email>`.
+3. They log out and back in (role is read at login time) to pick up the
+   new role.
 
 ## Roadmap
 

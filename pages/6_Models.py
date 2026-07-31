@@ -74,4 +74,8 @@ with get_session() as session:
                         if app_state.check_permission(permissions.CAN_APPROVE_MODELS, "approve a model"):
                             with get_session() as approval_session:
                                 model_registry.approve_model(approval_session, model.id, user_id)
-                            st.success("Model approved.")
+                            # The badge above was already rendered from data
+                            # fetched before this click was handled (same
+                            # loop iteration) - rerun so it reflects the new
+                            # status instead of showing stale "draft".
+                            st.rerun()
