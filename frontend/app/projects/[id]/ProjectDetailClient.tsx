@@ -6,6 +6,7 @@ import { useRequireAuth } from "@/lib/auth-context";
 import { api, ApiError, Project, Site } from "@/lib/api";
 import AppShell from "@/components/AppShell";
 import SiteSection from "@/components/SiteSection";
+import JobsSection from "@/components/JobsSection";
 
 export default function ProjectDetailClient({ projectId }: { projectId: string }) {
   const { token, loading: authLoading } = useRequireAuth();
@@ -207,6 +208,8 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
           ))}
         </div>
       )}
+
+      <JobsSection token={token} projectId={projectId} />
     </AppShell>
   );
 }

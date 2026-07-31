@@ -124,6 +124,17 @@ export interface Sample {
   created_at: string;
 }
 
+export interface Job {
+  id: string;
+  project_id: string;
+  pipeline_name: string;
+  status: string;
+  error_message: string | null;
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
 export interface Upload {
   id: string;
   sample_id: string;
@@ -234,6 +245,18 @@ export const api = {
       token,
       body: JSON.stringify(payload),
     }),
+
+  listJobs: (token: string, projectId: string) =>
+    request<Job[]>(`/api/v1/projects/${projectId}/jobs`, { token }),
+
+  createJob: (token: string, projectId: string, pipelineName?: string) =>
+    request<Job>(`/api/v1/projects/${projectId}/jobs`, {
+      method: "POST",
+      token,
+      body: JSON.stringify({ pipeline_name: pipelineName || "synthetic_omics_demo" }),
+    }),
+
+  getJob: (token: string, jobId: string) => request<Job>(`/api/v1/jobs/${jobId}`, { token }),
 
   listUploads: (token: string, sampleId: string) =>
     request<Upload[]>(`/api/v1/samples/${sampleId}/uploads`, { token }),

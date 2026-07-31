@@ -240,9 +240,10 @@ A Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 client for
 the FastAPI backend above, covering registration, login, the dashboard
 (`GET /api/v1/dashboard`), project listing/creation, and a project detail
 page with nested site → sampling event → sample → file upload creation and
-drilldown. It's the beginning of a full frontend replacing the Streamlit
-registry app one page at a time — for now, Pipelines, Reports, and Models
-are still only reachable through `Home.py`.
+drilldown, plus pipeline job submission with live polling to completion.
+It's the beginning of a full frontend replacing the Streamlit registry app
+one page at a time — for now, Reports and Models are still only reachable
+through `Home.py`.
 
 ```bash
 cd frontend
@@ -267,8 +268,11 @@ event → expand that and create a sample → expand that and upload a real
 file, each step a real API round trip and each list re-fetched (not
 appended client-side) so what's shown is what the server actually
 persisted, with the upload's real size and server-computed validation
-status (not client-guessed) rendered afterward; no crashes or console
-errors along the way.
+status (not client-guessed) rendered afterward; submit a pipeline job → the
+page polls `GET /api/v1/jobs/{id}` and the status badge moves from
+`queued`/`running` to `completed` as the real background job (the same
+`threading.Thread`-executed pipeline the API layer runs) finishes, not a
+client-side timer fake; no crashes or console errors along the way.
 
 Colors, spacing, and status indicators follow a validated categorical/status
 palette (`app/globals.css`), with light/dark variants selected by both the OS
