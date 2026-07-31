@@ -133,5 +133,30 @@ class JobResponse(BaseModel):
     completed_at: datetime | None
 
 
+class ApprovedModelSummary(BaseModel):
+    id: str
+    name: str
+    algorithm: str
+
+
+class ActivityEvent(BaseModel):
+    action: str
+    resource_type: str | None
+    details: str | None
+    created_at: datetime
+
+
+class DashboardResponse(BaseModel):
+    active_projects: int
+    sites: int
+    samples: int
+    jobs_queued: int
+    jobs_running: int
+    jobs_completed: int
+    jobs_failed: int
+    approved_models: list[ApprovedModelSummary]
+    recent_activity: list[ActivityEvent]
+
+
 class ErrorResponse(BaseModel):
     detail: str

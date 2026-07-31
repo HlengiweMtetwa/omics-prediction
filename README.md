@@ -234,6 +234,45 @@ from UI-driven ones. Submitted a real job via curl and polled
 pytest tests/test_api.py -v
 ```
 
+## Web frontend (`frontend/`)
+
+A Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 client for
+the FastAPI backend above, covering registration, login, the dashboard
+(`GET /api/v1/dashboard`), and project listing/creation. It's the beginning of
+a full frontend replacing the Streamlit registry app one page at a time — for
+now, Sites & Sampling, Uploads, Pipelines, Reports, and Models are still only
+reachable through `Home.py`.
+
+```bash
+cd frontend
+npm install
+cp .env.local.example .env.local   # set NEXT_PUBLIC_API_BASE_URL to your API's origin
+npm run dev
+```
+
+The backend must have the frontend's origin allow-listed for CORS:
+
+```bash
+CORS_ALLOWED_ORIGINS="http://localhost:3000" uvicorn api.main:app --reload
+```
+
+Verified end-to-end in a real headless browser (Playwright) against a live
+backend: unauthenticated visitor redirected to `/login`; register → redirect
+to `/login`; log in → redirect to `/dashboard` with real (not mocked) data
+from the API; create a project through the React form → it appears in
+`/projects`, a real round trip through `POST /api/v1/projects`; no crashes or
+console errors along the way.
+
+Colors, spacing, and status indicators follow a validated categorical/status
+palette (`app/globals.css`), with light/dark variants selected by both the OS
+theme and an explicit `data-theme` override.
+
+`npm audit` on the fresh scaffold reports vulnerabilities confined to
+dev-tooling transitive dependencies (ESLint's `minimatch`/`brace-expansion`,
+PostCSS, `sharp`); none are reachable from the app's runtime code, and
+`npm audit fix --force` would downgrade Next.js from 16.2.12 to 9.3.3, so it
+was not applied.
+
 ## Registry + upload + pipelines + reports + models app (`Home.py`)
 
 A separate Streamlit app (independent of `streamlit_dashboard.py`) exposing

@@ -419,3 +419,41 @@ def test_job_submission_role_denied_after_demotion(client):
         f"/api/v1/projects/{project_id}/jobs", json={}, headers=_auth_headers(owner_token)
     )
     assert resp.status_code == 403
+
+
+def test_dashboard_requires_authentication(client):
+    resp = client.get("/api/v1/dashboard")
+    assert resp.status_code == 401
+
+
+def test_dashboard_reflects_real_state(client):
+    _register(client)
+    token = _login(client).json()["access_token"]
+
+    empty = client.get("/api/v1/dashboard", headers=_auth_headers(token)).json()
+    assert empty["active_projects"] == 0
+    assert empty["approved_models"] == []
+
+    project_id = _create_project(client, token)
+    client.post(
+        f"/api/v1/projects/{project_id}/sites", json={"name": "Site A"}, headers=_auth_headers(token)
+    )
+
+    after = client.get("/api/v1/dashboard", headers=_auth_headers(token)).json()
+    assert after["active_projects"] == 1
+    assert after["sites"] == 1
+    actions = [e["action"] for e in after["recent_activity"]]
+    assert "project.create" in actions
+    assert "site.create" in actions
+
+
+def test_dashboard_scoped_to_caller_only(client):
+    _register(client, email="owner@example.com")
+    owner_token = _login(client, email="owner@example.com").json()["access_token"]
+    _create_project(client, owner_token)
+
+    _register(client, email="other@example.com")
+    other_token = _login(client, email="other@example.com").json()["access_token"]
+
+    other_summary = client.get("/api/v1/dashboard", headers=_auth_headers(other_token)).json()
+    assert other_summary["active_projects"] == 0
