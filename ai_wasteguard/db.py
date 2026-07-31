@@ -24,7 +24,12 @@ def _make_engine(database_url: str | None = None):
 
 
 engine = _make_engine()
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
+# expire_on_commit=False: callers commonly do `with get_session() as s: obj = ...`
+# and read attributes on `obj` after the block exits (the session is closed by
+# then). With the default expire_on_commit=True that access raises
+# DetachedInstanceError; disabling it keeps the last-known values readable
+# without a live session, which is what every caller here actually wants.
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True, expire_on_commit=False)
 
 
 def init_db(bind=None) -> None:

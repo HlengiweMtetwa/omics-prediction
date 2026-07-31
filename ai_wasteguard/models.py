@@ -208,3 +208,18 @@ class PipelineJob(Base):
 
     project: Mapped["Project"] = relationship()
     submitter: Mapped["User"] = relationship()
+
+
+class Report(Base):
+    __tablename__ = "reports"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"))
+    report_type: Mapped[str] = mapped_column(String(100))
+    generated_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    file_path: Mapped[str] = mapped_column(String(500))
+    content_hash: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+    project: Mapped["Project"] = relationship()
+    generator: Mapped["User"] = relationship()

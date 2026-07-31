@@ -70,7 +70,9 @@ else:
                         file_obj=uploaded_file,
                         omics_type=omics_type or None,
                     )
-                st.success(f"'{record.original_filename}' uploaded ({record.size_bytes} bytes).")
+                    uploaded_name = record.original_filename
+                    uploaded_size = record.size_bytes
+                st.success(f"'{uploaded_name}' uploaded ({uploaded_size} bytes).")
             except uploads.UploadValidationError as exc:
                 st.error(str(exc))
 
