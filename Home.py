@@ -1,7 +1,7 @@
 import streamlit as st
 
 import app_state
-from ai_wasteguard import auth
+from ai_wasteguard import auth, permissions
 
 st.set_page_config(page_title="AI-WasteGuard", layout="centered")
 
@@ -46,6 +46,11 @@ else:
             full_name = st.text_input("Full name")
             reg_email = st.text_input("Email", key="reg_email")
             institution = st.text_input("Institution (optional)")
+            role = st.selectbox(
+                "Role",
+                [r.value for r in permissions.SELF_REGISTERABLE_ROLES],
+                help="Determines what you can create/edit. Administrator accounts are not self-service.",
+            )
             reg_password = st.text_input("Password", type="password", key="reg_password")
             reg_password_confirm = st.text_input("Confirm password", type="password")
             reg_submitted = st.form_submit_button("Register")
@@ -58,7 +63,7 @@ else:
                 st.error("Password must be at least 8 characters.")
             else:
                 try:
-                    app_state.register(full_name, reg_email, reg_password, institution or None)
+                    app_state.register(full_name, reg_email, reg_password, institution or None, role)
                     st.success("Account created. You can now log in on the **Log in** tab.")
                 except auth.EmailAlreadyRegistered as exc:
                     st.error(str(exc))

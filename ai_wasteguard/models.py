@@ -167,3 +167,18 @@ class UploadedFile(Base):
 
     sample: Mapped["Sample"] = relationship(back_populates="uploaded_files")
     uploader: Mapped["User"] = relationship()
+
+
+class AuditLog(Base):
+    """Immutable record of security- and data-relevant actions. Rows are
+    only ever inserted, never updated or deleted by application code."""
+
+    __tablename__ = "audit_log"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    actor_user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    action: Mapped[str] = mapped_column(String(100))
+    resource_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    resource_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    details: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)

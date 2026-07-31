@@ -10,6 +10,7 @@ from argon2.exceptions import VerifyMismatchError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from ai_wasteguard import audit
 from ai_wasteguard.config import ACCOUNT_LOCKOUT_MINUTES, ACCOUNT_LOCKOUT_THRESHOLD
 from ai_wasteguard.models import AccountStatus, User, UserRole
 
@@ -76,6 +77,7 @@ def register_user(
     normalized_email = normalize_email(email)
     existing = session.execute(select(User).where(User.email == normalized_email)).scalar_one_or_none()
     if existing is not None:
+        audit.log_event(session, "register.duplicate_email", details=normalized_email)
         raise EmailAlreadyRegistered(f"An account already exists for {normalized_email}.")
 
     user = User(
@@ -88,6 +90,7 @@ def register_user(
     )
     session.add(user)
     session.flush()
+    audit.log_event(session, "register.success", actor_user_id=user.id, resource_type="user", resource_id=user.id)
     return user
 
 
@@ -97,14 +100,17 @@ def authenticate_user(session: Session, email: str, password: str) -> User:
 
     if user is None:
         # Deliberately identical to the wrong-password path below.
+        audit.log_event(session, "login.unknown_email", details=normalized_email)
         raise InvalidCredentials("Incorrect email or password.")
 
     if user.status == AccountStatus.DISABLED:
+        audit.log_event(session, "login.disabled_account", actor_user_id=user.id, resource_type="user", resource_id=user.id)
         raise AccountDisabled("This account has been disabled.")
 
     now = datetime.now(timezone.utc)
     locked_until = _as_aware_utc(user.locked_until)
     if locked_until is not None and locked_until > now:
+        audit.log_event(session, "login.locked_account", actor_user_id=user.id, resource_type="user", resource_id=user.id)
         raise AccountLocked(f"Account locked until {locked_until.isoformat()}.")
 
     if not verify_password(user.password_hash, password):
@@ -112,10 +118,12 @@ def authenticate_user(session: Session, email: str, password: str) -> User:
         if user.failed_login_count >= ACCOUNT_LOCKOUT_THRESHOLD:
             user.locked_until = now + timedelta(minutes=ACCOUNT_LOCKOUT_MINUTES)
         session.flush()
+        audit.log_event(session, "login.wrong_password", actor_user_id=user.id, resource_type="user", resource_id=user.id)
         raise InvalidCredentials("Incorrect email or password.")
 
     user.failed_login_count = 0
     user.locked_until = None
     user.last_login_at = now
     session.flush()
+    audit.log_event(session, "login.success", actor_user_id=user.id, resource_type="user", resource_id=user.id)
     return user

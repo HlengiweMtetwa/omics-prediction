@@ -88,13 +88,24 @@ canonical authentication, independent of the demo scripts above.
   server-side (`uuid4()`, never derived from the client filename) so a
   crafted filename like `../../etc/passwd.csv` cannot escape the upload
   directory - it's stored safely and only the basename is kept as a label.
+- **RBAC**: `ai_wasteguard/permissions.py` — one policy (role -> allowed
+  action sets) that both the UI and service layer consult; roles are
+  self-selectable at registration except Administrator. `Viewer`/`Student`/
+  `PublicHealthOfficial` get read-only access to the registry pages;
+  `Researcher`/`LaboratoryScientist`/`Administrator` can create records,
+  per role differences.
+- **Audit log**: `ai_wasteguard/audit.py` — every registration, login
+  attempt (success, wrong password, unknown email, disabled/locked
+  account), registry mutation, upload, and permission denial is recorded
+  as an immutable `AuditLog` row with actor, action, resource, and
+  timestamp.
 
 Setup:
 
 ```bash
 pip install -r requirements.txt
 alembic upgrade head        # creates instance/app.db and applies schema
-pytest tests/test_auth.py tests/test_models.py tests/test_registry.py tests/test_uploads.py -v
+pytest tests/test_auth.py tests/test_models.py tests/test_registry.py tests/test_uploads.py tests/test_audit_and_permissions.py -v
 ```
 
 ## Registry + upload app (`Home.py`)
@@ -115,7 +126,10 @@ rather than querying the database or filesystem directly (`app_state.py` is
 the thin Streamlit-session glue). Verified end-to-end in a real headless
 browser (Playwright): register → log in → create project → create site →
 create sampling event → create sample → upload a file → see it listed, with
-the on-disk checksum independently confirmed against the DB record.
+the on-disk checksum independently confirmed against the DB record. Also
+verified that a self-registered `Viewer` account cannot see or use the
+"create project" form, while a `Researcher` account can — confirming the
+permission policy is actually enforced, not just defined.
 
 ## Roadmap
 

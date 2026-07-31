@@ -8,6 +8,7 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from ai_wasteguard import audit
 from ai_wasteguard.models import Project, Sample, SamplingEvent, Site
 
 
@@ -47,6 +48,7 @@ def create_project(
     )
     session.add(project)
     session.flush()
+    audit.log_event(session, "project.create", actor_user_id=owner_id, resource_type="project", resource_id=project.id)
     return project
 
 
@@ -67,6 +69,7 @@ def create_site(
     latitude: float | None = None,
     longitude: float | None = None,
     site_type: str | None = None,
+    actor_user_id: str | None = None,
 ) -> Site:
     site = Site(
         project_id=project_id,
@@ -79,6 +82,7 @@ def create_site(
     )
     session.add(site)
     session.flush()
+    audit.log_event(session, "site.create", actor_user_id=actor_user_id, resource_type="site", resource_id=site.id)
     return site
 
 
@@ -99,6 +103,7 @@ def create_sampling_event(
     sample_matrix: str | None = None,
     collector: str | None = None,
     notes: str | None = None,
+    actor_user_id: str | None = None,
 ) -> SamplingEvent:
     if collected_at is None:
         raise ValidationError("Collection date/time is required.")
@@ -111,6 +116,9 @@ def create_sampling_event(
     )
     session.add(event)
     session.flush()
+    audit.log_event(
+        session, "sampling_event.create", actor_user_id=actor_user_id, resource_type="sampling_event", resource_id=event.id
+    )
     return event
 
 
@@ -130,6 +138,7 @@ def create_sample(
     sample_type: str | None = None,
     replicate: int = 1,
     lab_identifier: str | None = None,
+    actor_user_id: str | None = None,
 ) -> Sample:
     sample = Sample(
         sampling_event_id=sampling_event_id,
@@ -139,4 +148,5 @@ def create_sample(
     )
     session.add(sample)
     session.flush()
+    audit.log_event(session, "sample.create", actor_user_id=actor_user_id, resource_type="sample", resource_id=sample.id)
     return sample

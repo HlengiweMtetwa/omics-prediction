@@ -1,7 +1,7 @@
 import streamlit as st
 
 import app_state
-from ai_wasteguard import registry, uploads
+from ai_wasteguard import permissions, registry, uploads
 from ai_wasteguard.db import get_session
 
 st.set_page_config(page_title="Uploads — AI-WasteGuard", layout="centered")
@@ -51,24 +51,28 @@ if not sample_options:
 sample_id = sample_options[st.selectbox("Sample", list(sample_options.keys()))]
 
 st.subheader("Upload a file")
-omics_type = st.selectbox(
-    "Omics / data type", ["", "genomic", "metagenomic", "transcriptomic", "proteomic", "metabolomic", "environmental metadata"]
-)
-uploaded_file = st.file_uploader("File")
-if uploaded_file is not None and st.button("Upload"):
-    try:
-        with get_session() as session:
-            record = uploads.save_upload(
-                session,
-                sample_id=sample_id,
-                uploader_id=user_id,
-                original_filename=uploaded_file.name,
-                file_obj=uploaded_file,
-                omics_type=omics_type or None,
-            )
-        st.success(f"'{record.original_filename}' uploaded ({record.size_bytes} bytes).")
-    except uploads.UploadValidationError as exc:
-        st.error(str(exc))
+if app_state.current_user_role() not in permissions.CAN_UPLOAD:
+    st.info("Your role does not permit uploading files. You can still view files below.")
+else:
+    omics_type = st.selectbox(
+        "Omics / data type", ["", "genomic", "metagenomic", "transcriptomic", "proteomic", "metabolomic", "environmental metadata"]
+    )
+    uploaded_file = st.file_uploader("File")
+    if uploaded_file is not None and st.button("Upload"):
+        if app_state.check_permission(permissions.CAN_UPLOAD, "upload a file"):
+            try:
+                with get_session() as session:
+                    record = uploads.save_upload(
+                        session,
+                        sample_id=sample_id,
+                        uploader_id=user_id,
+                        original_filename=uploaded_file.name,
+                        file_obj=uploaded_file,
+                        omics_type=omics_type or None,
+                    )
+                st.success(f"'{record.original_filename}' uploaded ({record.size_bytes} bytes).")
+            except uploads.UploadValidationError as exc:
+                st.error(str(exc))
 
 st.subheader("Files for this sample")
 with get_session() as session:

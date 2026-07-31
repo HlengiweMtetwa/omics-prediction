@@ -8,9 +8,9 @@ import streamlit as st
 from sqlalchemy import select
 from sqlalchemy.exc import OperationalError
 
-from ai_wasteguard import auth
+from ai_wasteguard import audit, auth, permissions
 from ai_wasteguard.db import get_session
-from ai_wasteguard.models import User
+from ai_wasteguard.models import User, UserRole
 
 
 def db_is_ready() -> bool:
@@ -27,6 +27,11 @@ def current_user_id() -> str | None:
     return st.session_state.get("user_id")
 
 
+def current_user_role() -> UserRole | None:
+    role_value = st.session_state.get("user_role")
+    return UserRole(role_value) if role_value else None
+
+
 def is_logged_in() -> bool:
     return current_user_id() is not None
 
@@ -41,10 +46,10 @@ def login(email: str, password: str) -> None:
         st.session_state["user_role"] = user.role.value
 
 
-def register(full_name: str, email: str, password: str, institution: str | None) -> None:
+def register(full_name: str, email: str, password: str, institution: str | None, role: str) -> None:
     """Raises ai_wasteguard.auth.AuthError subclasses on failure."""
     with get_session() as session:
-        auth.register_user(session, full_name, email, password, institution=institution)
+        auth.register_user(session, full_name, email, password, institution=institution, role=UserRole(role))
 
 
 def logout() -> None:
@@ -60,3 +65,18 @@ def require_login() -> str:
         st.warning("Please log in on the Home page to access this page.")
         st.stop()
     return user_id
+
+
+def check_permission(allowed_roles: set[UserRole], action: str) -> bool:
+    """Returns True if the current user's role is permitted; otherwise
+    shows an inline error, logs the denial, and returns False. Callers
+    should skip the mutating call when this returns False."""
+    role = current_user_role()
+    try:
+        permissions.require_role(role, allowed_roles, action)
+        return True
+    except permissions.PermissionDenied as exc:
+        st.error(str(exc))
+        with get_session() as session:
+            audit.log_event(session, "permission.denied", actor_user_id=current_user_id(), details=action)
+        return False

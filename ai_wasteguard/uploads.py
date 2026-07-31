@@ -12,6 +12,7 @@ from typing import BinaryIO
 
 from sqlalchemy.orm import Session
 
+from ai_wasteguard import audit
 from ai_wasteguard.config import BASE_DIR
 from ai_wasteguard.models import UploadedFile, UploadValidationStatus
 
@@ -109,6 +110,14 @@ def save_upload(
     )
     session.add(upload)
     session.flush()
+    audit.log_event(
+        session,
+        "upload.create",
+        actor_user_id=uploader_id,
+        resource_type="uploaded_file",
+        resource_id=upload.id,
+        details=upload.original_filename,
+    )
     return upload
 
 
