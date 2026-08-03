@@ -571,3 +571,128 @@ def test_model_not_owned_cannot_be_approved(client):
 
     resp = client.post(f"/api/v1/models/{model_id}/approve", headers=_auth_headers(other_token))
     assert resp.status_code == 404
+
+
+def test_non_admin_cannot_list_or_manage_users(client):
+    _register(client, role="researcher", email="jane@example.com")
+    token = _login(client, email="jane@example.com").json()["access_token"]
+
+    resp = client.get("/api/v1/admin/users", headers=_auth_headers(token))
+    assert resp.status_code == 403
+
+
+def test_admin_can_list_users(client):
+    _register(client, role="researcher", email="admin@example.com")
+    admin_token = _login(client, email="admin@example.com").json()["access_token"]
+    _set_role("admin@example.com", "administrator")
+
+    _register(client, role="viewer", email="viewer@example.com")
+
+    listing = client.get("/api/v1/admin/users", headers=_auth_headers(admin_token))
+    assert listing.status_code == 200
+    emails = {u["email"] for u in listing.json()}
+    assert {"admin@example.com", "viewer@example.com"} <= emails
+
+
+def test_admin_can_change_a_non_admin_users_role(client):
+    _register(client, role="researcher", email="admin@example.com")
+    admin_token = _login(client, email="admin@example.com").json()["access_token"]
+    _set_role("admin@example.com", "administrator")
+
+    _register(client, role="viewer", email="viewer@example.com")
+    target_id = client.get("/api/v1/admin/users", headers=_auth_headers(admin_token)).json()
+    target_id = next(u["id"] for u in target_id if u["email"] == "viewer@example.com")
+
+    resp = client.post(
+        f"/api/v1/admin/users/{target_id}/role",
+        json={"role": "laboratory_scientist"},
+        headers=_auth_headers(admin_token),
+    )
+    assert resp.status_code == 200
+    assert resp.json()["role"] == "laboratory_scientist"
+
+
+def test_admin_cannot_grant_administrator_via_role_endpoint(client):
+    _register(client, role="researcher", email="admin@example.com")
+    admin_token = _login(client, email="admin@example.com").json()["access_token"]
+    _set_role("admin@example.com", "administrator")
+
+    _register(client, role="viewer", email="viewer@example.com")
+    users = client.get("/api/v1/admin/users", headers=_auth_headers(admin_token)).json()
+    target_id = next(u["id"] for u in users if u["email"] == "viewer@example.com")
+
+    resp = client.post(
+        f"/api/v1/admin/users/{target_id}/role",
+        json={"role": "administrator"},
+        headers=_auth_headers(admin_token),
+    )
+    assert resp.status_code == 400
+
+
+def test_admin_cannot_change_role_or_status_of_another_administrator(client):
+    _register(client, role="researcher", email="admin1@example.com")
+    admin1_token = _login(client, email="admin1@example.com").json()["access_token"]
+    _set_role("admin1@example.com", "administrator")
+
+    _register(client, role="researcher", email="admin2@example.com")
+    _set_role("admin2@example.com", "administrator")
+    users = client.get("/api/v1/admin/users", headers=_auth_headers(admin1_token)).json()
+    admin2_id = next(u["id"] for u in users if u["email"] == "admin2@example.com")
+
+    role_resp = client.post(
+        f"/api/v1/admin/users/{admin2_id}/role",
+        json={"role": "viewer"},
+        headers=_auth_headers(admin1_token),
+    )
+    assert role_resp.status_code == 400
+
+    disable_resp = client.post(f"/api/v1/admin/users/{admin2_id}/disable", headers=_auth_headers(admin1_token))
+    assert disable_resp.status_code == 400
+
+
+def test_admin_cannot_change_own_role_or_status(client):
+    _register(client, role="researcher", email="admin@example.com")
+    admin_token = _login(client, email="admin@example.com").json()["access_token"]
+    _set_role("admin@example.com", "administrator")
+    users = client.get("/api/v1/admin/users", headers=_auth_headers(admin_token)).json()
+    self_id = next(u["id"] for u in users if u["email"] == "admin@example.com")
+
+    resp = client.post(f"/api/v1/admin/users/{self_id}/disable", headers=_auth_headers(admin_token))
+    assert resp.status_code == 400
+
+
+def test_admin_can_disable_and_reenable_a_user_who_then_cannot_or_can_login(client):
+    _register(client, role="researcher", email="admin@example.com")
+    admin_token = _login(client, email="admin@example.com").json()["access_token"]
+    _set_role("admin@example.com", "administrator")
+
+    _register(client, role="viewer", email="target@example.com")
+    users = client.get("/api/v1/admin/users", headers=_auth_headers(admin_token)).json()
+    target_id = next(u["id"] for u in users if u["email"] == "target@example.com")
+
+    disable_resp = client.post(f"/api/v1/admin/users/{target_id}/disable", headers=_auth_headers(admin_token))
+    assert disable_resp.status_code == 200
+    assert disable_resp.json()["status"] == "disabled"
+
+    login_after_disable = _login(client, email="target@example.com")
+    assert login_after_disable.status_code == 403
+
+    enable_resp = client.post(f"/api/v1/admin/users/{target_id}/enable", headers=_auth_headers(admin_token))
+    assert enable_resp.status_code == 200
+    assert enable_resp.json()["status"] == "active"
+
+    login_after_enable = _login(client, email="target@example.com")
+    assert login_after_enable.status_code == 200
+
+
+def test_role_change_for_nonexistent_user_returns_404(client):
+    _register(client, role="researcher", email="admin@example.com")
+    admin_token = _login(client, email="admin@example.com").json()["access_token"]
+    _set_role("admin@example.com", "administrator")
+
+    resp = client.post(
+        "/api/v1/admin/users/does-not-exist/role",
+        json={"role": "viewer"},
+        headers=_auth_headers(admin_token),
+    )
+    assert resp.status_code == 404

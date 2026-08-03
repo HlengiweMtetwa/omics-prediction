@@ -188,5 +188,20 @@ class DashboardResponse(BaseModel):
     recent_activity: list[ActivityEvent]
 
 
+class AdminUserResponse(BaseModel):
+    id: str
+    full_name: str
+    email: str
+    institution: str | None
+    role: str
+    status: str
+    created_at: datetime
+    last_login_at: datetime | None
+
+
+class RoleChangeRequest(BaseModel):
+    role: str
+
+
 class ErrorResponse(BaseModel):
     detail: str

@@ -147,6 +147,17 @@ export interface Upload {
   created_at: string;
 }
 
+export interface AdminUser {
+  id: string;
+  full_name: string;
+  email: string;
+  institution: string | null;
+  role: string;
+  status: string;
+  created_at: string;
+  last_login_at: string | null;
+}
+
 export interface Report {
   id: string;
   project_id: string;
@@ -314,6 +325,21 @@ export const api = {
 
   approveModel: (token: string, modelId: string) =>
     request<MLModel>(`/api/v1/models/${modelId}/approve`, { method: "POST", token }),
+
+  listAdminUsers: (token: string) => request<AdminUser[]>("/api/v1/admin/users", { token }),
+
+  changeUserRole: (token: string, userId: string, role: string) =>
+    request<AdminUser>(`/api/v1/admin/users/${userId}/role`, {
+      method: "POST",
+      token,
+      body: JSON.stringify({ role }),
+    }),
+
+  disableUser: (token: string, userId: string) =>
+    request<AdminUser>(`/api/v1/admin/users/${userId}/disable`, { method: "POST", token }),
+
+  enableUser: (token: string, userId: string) =>
+    request<AdminUser>(`/api/v1/admin/users/${userId}/enable`, { method: "POST", token }),
 
   listUploads: (token: string, sampleId: string) =>
     request<Upload[]>(`/api/v1/samples/${sampleId}/uploads`, { token }),

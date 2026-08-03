@@ -205,6 +205,13 @@ log, and vice versa, because both go through `ai_wasteguard.auth` /
   silent cross-project registration); approval is gated to the
   Administrator role (`permissions.CAN_APPROVE_MODELS`), checked after
   ownership so a non-owner still gets 404.
+- `GET /api/v1/admin/users`, `POST /api/v1/admin/users/{id}/role`,
+  `POST /api/v1/admin/users/{id}/disable`/`enable` - Administrator-only
+  (`permissions.CAN_MANAGE_USERS`). The role endpoint rejects `administrator`
+  as a target value (400), and every one of these three endpoints rejects
+  acting on a user whose *current* role is already Administrator (400) -
+  granting or revoking Administrator status stays exclusively in
+  `scripts/create_admin.py`, run out-of-band.
 - Requesting (or mutating) a resource you don't own returns 404, not
   403 - deliberately, at every level of the chain, so the API never
   confirms a resource id exists to someone who can't see it (same
@@ -347,6 +354,27 @@ across a role change, not just defined.
    `python scripts/create_admin.py <their-email>`.
 3. They log out and back in (role is read at login time) to pick up the
    new role.
+
+Once at least one Administrator exists, day-to-day user management (role
+changes among the self-registerable roles, disabling/re-enabling accounts)
+is available through the frontend's **Admin** page - visible in the nav
+only to Administrator accounts, backed by `GET/POST /api/v1/admin/users/...`.
+Granting or revoking Administrator itself stays CLI-only by design
+(`ai_wasteguard/admin.py`'s `_require_non_administrator_target` rejects any
+role or status change targeting an Administrator account, generalizing the
+rule above rather than special-casing it): the API returns 400 if you try
+to set a user's role to `administrator` through the admin page, and 400 if
+you try to change the role or status of an account that is already an
+Administrator - including your own, since the caller of these endpoints is
+themselves necessarily an Administrator. Verified end-to-end in a headless
+browser: a non-Administrator sees no "Admin" nav link at all; after
+promoting an account via the real `scripts/create_admin.py` script (not a
+UI shortcut) and logging back in, the Admin page lists all users, changing
+a non-admin user's role persists and is reflected immediately, disabling a
+user's account is enforced at the API (their next login attempt gets a
+real 403, not just a hidden UI element), and the admin's own row - along
+with any other Administrator's row - shows a locked, disabled control
+instead of an editable one.
 
 ## Roadmap
 

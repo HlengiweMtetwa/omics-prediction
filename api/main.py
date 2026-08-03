@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from api.routers import auth, dashboard, jobs, models, projects, reports, sites_and_sampling, uploads
+from api.routers import admin, auth, dashboard, jobs, models, projects, reports, sites_and_sampling, uploads
 
 logger = logging.getLogger("ai_wasteguard.api")
 
@@ -44,6 +44,7 @@ app.include_router(uploads.router)
 app.include_router(jobs.router)
 app.include_router(reports.router)
 app.include_router(models.router)
+app.include_router(admin.router)
 
 
 @app.exception_handler(Exception)

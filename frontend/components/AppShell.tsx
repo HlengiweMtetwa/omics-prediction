@@ -12,6 +12,8 @@ const NAV_ITEMS = [
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const navItems =
+    user?.role === "administrator" ? [...NAV_ITEMS, { href: "/admin", label: "Admin" }] : NAV_ITEMS;
 
   return (
     <div className="min-h-screen flex" style={{ background: "var(--page-plane)" }}>
@@ -29,7 +31,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <nav className="px-3 py-4 flex flex-col gap-1">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const active = pathname?.startsWith(item.href);
               return (
                 <Link
