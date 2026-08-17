@@ -55,10 +55,21 @@ pytest tests/ -v
   default hyperparameters.
 - No provenance tracking beyond the upload/job records themselves, no
   evidence hierarchy, and no API layer exists yet.
-- Pipeline jobs run the *synthetic demo* pipeline only (collect_data ->
-  prepare_dataset -> train_model) - no real bioinformatics tool (FastQC,
-  Kraken2, CARD/RGI, etc.) is wired in, and a job does not yet consume a
-  specific uploaded file; it always regenerates its own synthetic data.
+- A pipeline job now analyzes a real uploaded tabular file when one exists
+  for the project (`ai_wasteguard/analysis.py`): real per-column statistics
+  always, plus a real trained/evaluated classifier when the file has a
+  recognizable label column (`label`, `disease_present`, `target`,
+  `outcome`, `class`, or `diagnosis`) with enough rows and class variety -
+  it never fabricates a metric or guesses at a label column that isn't
+  there. Only when a project has **no** analyzable upload does a job fall
+  back to the old synthetic demo pipeline (collect_data -> prepare_dataset
+  -> train_model, still real subprocesses, but generating random data) -
+  and that fallback's output is unmissably banner-labeled "SYNTHETIC DEMO
+  DATA" everywhere it's shown (job log, generated report), so it's never
+  mistaken for a real result. No real bioinformatics tool (FastQC, Kraken2,
+  CARD/RGI, etc.) is wired in yet, and the real-data path only supports
+  tabular formats (csv/tsv/txt/json/xlsx/xls/parquet) - sequence files
+  (fasta/fastq/bam/vcf/etc.) can be uploaded and stored but aren't analyzed.
 - Jobs run via a Python `threading.Thread` per submission, not a real task
   queue (Celery/RQ) - adequate for a single-process prototype with a handful
   of concurrent users, not for production load or multi-worker deployment.
