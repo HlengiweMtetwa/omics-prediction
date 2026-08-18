@@ -67,6 +67,25 @@ python -m omics_wbe.cli archives        # show NCBI/ENA queries, probe connectiv
 python -m omics_wbe.cli stage-one       # build analysis panels only
 ```
 
+### Surveillance dashboard
+
+The operational view — which catchments need attention this week, and how much
+to trust the signal:
+
+```bash
+streamlit run pages/7_Wastewater_Surveillance.py
+```
+
+It shows only governance-screened aggregates, so it needs no login and touches
+no registry record. Status is computed **causally**: rewinding the reporting
+week reconstructs the view the system would have shown then, with no later data
+leaking in. A catchment that stopped reporting is shown as `no recent data`,
+never as `normal` — silence is not reassurance.
+
+On the last week in the data (2024-01-20) it puts influenza A at the 94.6th
+percentile of its own history across 28 counties and RSV at the 93.4th, which is
+the winter respiratory season the data should show.
+
 ## Architecture
 
 ```
@@ -86,6 +105,8 @@ omics_wbe/
   pipeline.py          stage 1: raw -> analysis panels (cached, manifested)
   study.py             stage 2: all three objectives -> results bundle
   cli.py               command-line entry point
+
+pages/7_Wastewater_Surveillance.py   Streamlit presentation over the above
 ```
 
 Adding a surveillance programme means writing one connector that emits

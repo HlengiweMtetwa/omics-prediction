@@ -98,6 +98,26 @@ Every reported result carries:
 4. A **specification curve** re-running the headline model under every
    defensible analysis choice
 
+## 8a. Operational display
+
+A dashboard is part of the model's safety surface, not a separate cosmetic
+concern. Any surveillance display built on these outputs must:
+
+- **Apply governance before rendering.** A suppression control a dashboard can
+  bypass is not a control.
+- **Compute status causally.** A status shown for week *t* must use only data
+  available at week *t*. Back-filling with hindsight makes a system look far more
+  useful than it is.
+- **Report staleness as a distinct status.** A catchment that stopped reporting
+  is unknown, not normal.
+- **Show measured performance beside any prediction**, including the comparison
+  against clinical data alone, and the operating-point table.
+- **Never render a wastewater value as a case number.**
+- **State plainly whether the feed is live.** A retrospective extract must say so.
+
+Winsorise the control-chart input even where the display is unclipped: an
+expanding-SD control limit is permanently desensitised by one deep excursion.
+
 ## 9. Acceptance criteria
 
 - [ ] Rolling-origin CV with a gap ≥ the longest feature lag

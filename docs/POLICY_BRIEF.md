@@ -129,6 +129,18 @@ proposed to help.
 **Recommendation:** fund local excretion-parameter calibration before
 commissioning any non-communicable-disease wastewater reporting.
 
+## Seeing it
+
+The operational view — status per catchment, pathogen activity, trend, and the
+measured performance a threshold choice should rest on — runs as:
+
+```bash
+streamlit run pages/7_Wastewater_Surveillance.py
+```
+
+It applies the publication-governance controls before rendering anything, and
+labels itself a retrospective research extract rather than implying a live feed.
+
 ## Recommended actions
 
 1. **Commission for early warning.** Define the escalation protocol before the
