@@ -1,0 +1,108 @@
+{
+  "stage": "03_build_qld_panel",
+  "started_at": "2026-08-18T01:04:45.830054+00:00",
+  "finished_at": "2026-08-18T01:04:46.242940+00:00",
+  "git_revision": "26021e4c0da29cbea90a095fafc988306dbe6d44",
+  "libraries": {
+    "python": "3.11.15",
+    "numpy": "2.4.6",
+    "pandas": "3.0.5",
+    "sklearn": "1.9.0",
+    "scipy": "1.17.1",
+    "matplotlib": "3.11.1"
+  },
+  "config": {
+    "recovery_min_pct": 5.0,
+    "recovery_max_pct": 200.0,
+    "censored_substitution": "lod_over_sqrt2",
+    "primary_metric": "log10_ratio_pmmov",
+    "week_anchor": "W-SAT",
+    "min_samples_per_site_week": 1,
+    "min_population_served": 3000,
+    "min_sites_per_region_week": 1,
+    "max_lag_weeks": 4,
+    "forecast_horizons": [
+      0,
+      1,
+      2
+    ],
+    "n_cv_splits": 5,
+    "cv_gap_weeks": 4,
+    "conformal_alpha": 0.2,
+    "ewma_lambda": 0.3,
+    "alert_sigma": 2.0,
+    "surge_threshold_per_100k": 20.0,
+    "seed": 20240501,
+    "extras": {}
+  },
+  "inputs": {
+    "qld_0": "/home/user/omics-prediction/data/raw/qld/queensland-wastewater-surveillance-for-sars-cov-2-in-2020v1.1(1).csv::437d1102e7eb200bc1a82404525c7d948bfa4130be5e79c97320a69cfc9e280a",
+    "qld_1": "/home/user/omics-prediction/data/raw/qld/queensland-wastewater-surveillance-for-sars-cov-2-q1-2021.csv::e83542761c035a5b8cf5e039b0af69e14b58ee9ede1ea8d38e98e76c7c09dd65",
+    "qld_2": "/home/user/omics-prediction/data/raw/qld/queensland-wastewater-surveillance-for-sars-cov-2-q2-2021.csv::6f159584bfda809cc6b7b5070eef65830d18430601a512b53f71dc61f6329efe",
+    "qld_3": "/home/user/omics-prediction/data/raw/qld/queensland-wastewater-surveillance-for-sars-cov-2-q3-2021.csv::c08e96c9dc524eebc3bb32a774964db23e4961123903dd530a82011e88d26205",
+    "qld_4": "/home/user/omics-prediction/data/raw/qld/queensland-wastewater-surveillance-for-sars-cov-2-q4-2021.csv::f9d3136fc0bd9e9ea291761f16908087bcd2ad9890461f70f565c833876de85a",
+    "qld_5": "/home/user/omics-prediction/data/raw/qld/queensland-wastewater-surveillance-for-sars-cov-2-q1-2022.csv::334d7beec8496cf006a8062d201d7dd2e61abac69489884646896d872c279b89",
+    "qld_6": "/home/user/omics-prediction/data/raw/qld/queensland-wastewater-surveillance-for-sars-cov-2-q2-2022.csv::cc0a1fbb504af84a10aa824e5b6e9e6695d72235bbfb35b67ce806280bbe40d5",
+    "qld_7": "/home/user/omics-prediction/data/raw/qld/queensland-wastewater-surveillance-for-sars-cov-2-q3-2022.csv::d1d98e1a18bf7f47c8e0eb864d75d612589d777283aa44773af9472096210b9d"
+  },
+  "outputs": {
+    "qld_site_week": "/home/user/omics-prediction/data/interim/qld_site_week.parquet::5f337c14267ba5b97601a65fb0500cab4022fa33eaf50e45b74756ebceacb990"
+  },
+  "metrics": {
+    "qld": {
+      "files": [
+        {
+          "path": "queensland-wastewater-surveillance-for-sars-cov-2-in-2020v1.1(1).csv",
+          "rows": 727,
+          "blank_padding_rows": 0
+        },
+        {
+          "path": "queensland-wastewater-surveillance-for-sars-cov-2-q1-2021.csv",
+          "rows": 891,
+          "blank_padding_rows": 0
+        },
+        {
+          "path": "queensland-wastewater-surveillance-for-sars-cov-2-q2-2021.csv",
+          "rows": 1004,
+          "blank_padding_rows": 0
+        },
+        {
+          "path": "queensland-wastewater-surveillance-for-sars-cov-2-q3-2021.csv",
+          "rows": 1643,
+          "blank_padding_rows": 0
+        },
+        {
+          "path": "queensland-wastewater-surveillance-for-sars-cov-2-q4-2021.csv",
+          "rows": 1911,
+          "blank_padding_rows": 0
+        },
+        {
+          "path": "queensland-wastewater-surveillance-for-sars-cov-2-q1-2022.csv",
+          "rows": 300,
+          "blank_padding_rows": 926140
+        },
+        {
+          "path": "queensland-wastewater-surveillance-for-sars-cov-2-q2-2022.csv",
+          "rows": 248,
+          "blank_padding_rows": 52
+        },
+        {
+          "path": "queensland-wastewater-surveillance-for-sars-cov-2-q3-2022.csv",
+          "rows": 209,
+          "blank_padding_rows": 0
+        }
+      ],
+      "blank_padding_rows_dropped": 926192,
+      "rows_read": 6933,
+      "unmapped_results": {},
+      "rows_dropped_unparseable": 0,
+      "rows_kept": 6933,
+      "n_sites": 122,
+      "n_subcatchment_sites": 42,
+      "detection_rate": 0.18390307226308958,
+      "date_min": "2020-07-22",
+      "date_max": "2022-09-21"
+    }
+  },
+  "notes": []
+}

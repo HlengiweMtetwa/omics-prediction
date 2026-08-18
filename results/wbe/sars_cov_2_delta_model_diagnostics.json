@@ -1,0 +1,174 @@
+{
+  "block_comparisons": [
+    {
+      "estimator": "ridge",
+      "reference": "ar",
+      "challenger": "wbe+ar",
+      "n_paired_rows": 833,
+      "rmse_reference": 0.2270054091743285,
+      "rmse_challenger": 0.22362629922654578,
+      "delta_rmse": -0.0033791099477827047,
+      "ci95_low": -0.012311426277602493,
+      "ci95_high": 0.005690006534371971,
+      "p_a_better": 0.7905,
+      "horizon": 0
+    },
+    {
+      "estimator": "ridge",
+      "reference": "ar",
+      "challenger": "wbe",
+      "n_paired_rows": 833,
+      "rmse_reference": 0.2270054091743285,
+      "rmse_challenger": 0.2417641006662701,
+      "delta_rmse": 0.014758691491941617,
+      "ci95_low": 0.0006164587421647327,
+      "ci95_high": 0.030085346259924154,
+      "p_a_better": 0.021,
+      "horizon": 0
+    },
+    {
+      "estimator": "ridge",
+      "reference": "ar",
+      "challenger": "wbe+ar",
+      "n_paired_rows": 846,
+      "rmse_reference": 0.41437674293814714,
+      "rmse_challenger": 0.3952080456317806,
+      "delta_rmse": -0.019168697306366556,
+      "ci95_low": -0.03858750443899725,
+      "ci95_high": 0.001697710232351621,
+      "p_a_better": 0.9635,
+      "horizon": 1
+    },
+    {
+      "estimator": "ridge",
+      "reference": "ar",
+      "challenger": "wbe",
+      "n_paired_rows": 846,
+      "rmse_reference": 0.41437674293814714,
+      "rmse_challenger": 0.416518001762978,
+      "delta_rmse": 0.0021412588248308495,
+      "ci95_low": -0.02673926244459978,
+      "ci95_high": 0.03141082861563975,
+      "p_a_better": 0.4455,
+      "horizon": 1
+    },
+    {
+      "estimator": "ridge",
+      "reference": "ar",
+      "challenger": "wbe+ar",
+      "n_paired_rows": 860,
+      "rmse_reference": 0.5602345524221588,
+      "rmse_challenger": 0.517816641012809,
+      "delta_rmse": -0.04241791140934981,
+      "ci95_low": -0.06944260475544402,
+      "ci95_high": -0.015648996874251715,
+      "p_a_better": 0.9995,
+      "horizon": 2
+    },
+    {
+      "estimator": "ridge",
+      "reference": "ar",
+      "challenger": "wbe",
+      "n_paired_rows": 860,
+      "rmse_reference": 0.5602345524221588,
+      "rmse_challenger": 0.5568822674028591,
+      "delta_rmse": -0.003352285019299739,
+      "ci95_low": -0.04665779076050956,
+      "ci95_high": 0.03811570949644562,
+      "p_a_better": 0.579,
+      "horizon": 2
+    }
+  ],
+  "conformal_coverage": [
+    {
+      "alpha": 0.2,
+      "nominal_coverage": 0.8,
+      "empirical_coverage": 0.8894289185905225,
+      "n_calibrated": 823,
+      "median_interval_width": 0.6131818688744014,
+      "horizon": 0,
+      "block": "wbe",
+      "estimator": "ridge"
+    },
+    {
+      "alpha": 0.2,
+      "nominal_coverage": 0.8,
+      "empirical_coverage": 0.9105011933174224,
+      "n_calibrated": 838,
+      "median_interval_width": 0.5516497117871522,
+      "horizon": 0,
+      "block": "ar",
+      "estimator": "ridge"
+    },
+    {
+      "alpha": 0.2,
+      "nominal_coverage": 0.8,
+      "empirical_coverage": 0.8894289185905225,
+      "n_calibrated": 823,
+      "median_interval_width": 0.5641517119199029,
+      "horizon": 0,
+      "block": "wbe+ar",
+      "estimator": "ridge"
+    },
+    {
+      "alpha": 0.2,
+      "nominal_coverage": 0.8,
+      "empirical_coverage": 0.9436964504283966,
+      "n_calibrated": 817,
+      "median_interval_width": 1.1192445478671122,
+      "horizon": 1,
+      "block": "wbe",
+      "estimator": "ridge"
+    },
+    {
+      "alpha": 0.2,
+      "nominal_coverage": 0.8,
+      "empirical_coverage": 0.9231692677070829,
+      "n_calibrated": 833,
+      "median_interval_width": 1.0160458770430727,
+      "horizon": 1,
+      "block": "ar",
+      "estimator": "ridge"
+    },
+    {
+      "alpha": 0.2,
+      "nominal_coverage": 0.8,
+      "empirical_coverage": 0.9167686658506732,
+      "n_calibrated": 817,
+      "median_interval_width": 0.9904425802202566,
+      "horizon": 1,
+      "block": "wbe+ar",
+      "estimator": "ridge"
+    },
+    {
+      "alpha": 0.2,
+      "nominal_coverage": 0.8,
+      "empirical_coverage": 0.9557739557739557,
+      "n_calibrated": 814,
+      "median_interval_width": 1.578080729728017,
+      "horizon": 2,
+      "block": "wbe",
+      "estimator": "ridge"
+    },
+    {
+      "alpha": 0.2,
+      "nominal_coverage": 0.8,
+      "empirical_coverage": 0.9506024096385542,
+      "n_calibrated": 830,
+      "median_interval_width": 1.3313548385871536,
+      "horizon": 2,
+      "block": "ar",
+      "estimator": "ridge"
+    },
+    {
+      "alpha": 0.2,
+      "nominal_coverage": 0.8,
+      "empirical_coverage": 0.9398034398034398,
+      "n_calibrated": 814,
+      "median_interval_width": 1.3248110427872022,
+      "horizon": 2,
+      "block": "wbe+ar",
+      "estimator": "ridge"
+    }
+  ]
+}

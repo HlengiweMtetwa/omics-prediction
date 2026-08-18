@@ -1,0 +1,759 @@
+{
+  "stage": "04_model_experiment_sars_cov_2_level",
+  "started_at": "2026-08-18T05:05:02.224602+00:00",
+  "finished_at": "2026-08-18T05:05:02.236238+00:00",
+  "git_revision": "26021e4c0da29cbea90a095fafc988306dbe6d44",
+  "libraries": {
+    "python": "3.11.15",
+    "numpy": "2.4.6",
+    "pandas": "3.0.5",
+    "sklearn": "1.9.0",
+    "scipy": "1.17.1",
+    "matplotlib": "3.11.1"
+  },
+  "config": {
+    "recovery_min_pct": 5.0,
+    "recovery_max_pct": 200.0,
+    "censored_substitution": "lod_over_sqrt2",
+    "primary_metric": "log10_ratio_pmmov",
+    "signal_variant": "zc",
+    "signal_clip": 3.0,
+    "week_anchor": "W-SAT",
+    "min_samples_per_site_week": 1,
+    "min_population_served": 3000,
+    "min_sites_per_region_week": 1,
+    "max_lag_weeks": 4,
+    "forecast_horizons": [
+      0,
+      1,
+      2
+    ],
+    "n_cv_splits": 5,
+    "cv_gap_weeks": 4,
+    "conformal_alpha": 0.2,
+    "ewma_lambda": 0.3,
+    "alert_sigma": 2.0,
+    "surge_threshold_per_100k": 20.0,
+    "seed": 20240501,
+    "extras": {}
+  },
+  "inputs": {},
+  "outputs": {
+    "model_summary": "/home/user/omics-prediction/results/wbe/tables/sars_cov_2_level_model_summary.csv::141f3c7fe72b528a4f4c552c93d639d957db40733c2ebb5c2f5aea19df2ae393",
+    "model_kfold": "/home/user/omics-prediction/results/wbe/tables/sars_cov_2_level_model_kfold.csv::b37b211d441ad8d5857d129ae54229763a720e143bb86d00b75a1b858c9a5954",
+    "model_optimism": "/home/user/omics-prediction/results/wbe/tables/sars_cov_2_level_model_optimism.csv::9e0f23417a880c1f98a0275e69e45cd7fc097d90540befce51b67cbd9c48d50d",
+    "model_predictions": "/home/user/omics-prediction/results/wbe/tables/sars_cov_2_level_model_predictions.csv::4468420738ac13af56ed06acd5dd89506e5aae967f815174c9b36ff35d36b10e",
+    "diagnostics": "/home/user/omics-prediction/results/wbe/sars_cov_2_level_model_diagnostics.json::4b04079ece74675fdb4b91873222d381db0fd62f1c97d69a9aabbfdf73c79033"
+  },
+  "metrics": {
+    "features": {
+      "rows": 1600,
+      "regions": 17,
+      "target_mode": "level",
+      "max_lag": 4,
+      "horizons": [
+        0,
+        1,
+        2
+      ],
+      "wbe_feature_columns": [
+        "wbe_lag0",
+        "wbe_lag1",
+        "wbe_lag2",
+        "wbe_lag3",
+        "wbe_lag4",
+        "wbe_roll3_mean",
+        "wbe_roll3_std",
+        "wbe_delta1",
+        "wbe_delta2",
+        "wbe_slope3",
+        "wbe_missing_frac"
+      ],
+      "ar_feature_columns": [
+        "ar_lag1",
+        "ar_lag2",
+        "ar_lag3",
+        "ar_lag4",
+        "ar_delta1",
+        "ar_roll3_mean"
+      ],
+      "date_min": "2020-03-21",
+      "date_max": "2023-03-18"
+    },
+    "folds": {
+      "h0_wbe": {
+        "folds": [
+          {
+            "fold": 0,
+            "n_train": 220,
+            "n_test": 119,
+            "train_end": "2021-10-16",
+            "test_start": "2021-11-20",
+            "test_end": "2022-02-12"
+          },
+          {
+            "fold": 1,
+            "n_train": 326,
+            "n_test": 201,
+            "train_end": "2022-01-22",
+            "test_start": "2022-02-26",
+            "test_end": "2022-05-21"
+          },
+          {
+            "fold": 2,
+            "n_train": 528,
+            "n_test": 207,
+            "train_end": "2022-04-30",
+            "test_start": "2022-06-04",
+            "test_end": "2022-08-27"
+          },
+          {
+            "fold": 3,
+            "n_train": 751,
+            "n_test": 216,
+            "train_end": "2022-08-06",
+            "test_start": "2022-09-10",
+            "test_end": "2022-12-03"
+          },
+          {
+            "fold": 4,
+            "n_train": 1000,
+            "n_test": 199,
+            "train_end": "2022-11-19",
+            "test_start": "2022-12-24",
+            "test_end": "2023-03-18"
+          }
+        ],
+        "n_folds": 5,
+        "target_mode": "level",
+        "estimators": [
+          "baseline_mean",
+          "gradient_boosting",
+          "random_forest",
+          "ridge"
+        ],
+        "baselines_skipped": [
+          "persistence",
+          "drift"
+        ]
+      },
+      "h0_ar": {
+        "folds": [
+          {
+            "fold": 0,
+            "n_train": 216,
+            "n_test": 112,
+            "train_end": "2021-09-18",
+            "test_start": "2021-10-23",
+            "test_end": "2022-01-15"
+          },
+          {
+            "fold": 1,
+            "n_train": 332,
+            "n_test": 206,
+            "train_end": "2022-01-01",
+            "test_start": "2022-02-05",
+            "test_end": "2022-04-30"
+          },
+          {
+            "fold": 2,
+            "n_train": 548,
+            "n_test": 205,
+            "train_end": "2022-04-16",
+            "test_start": "2022-05-21",
+            "test_end": "2022-08-13"
+          },
+          {
+            "fold": 3,
+            "n_train": 790,
+            "n_test": 216,
+            "train_end": "2022-07-30",
+            "test_start": "2022-09-03",
+            "test_end": "2022-11-26"
+          },
+          {
+            "fold": 4,
+            "n_train": 1054,
+            "n_test": 211,
+            "train_end": "2022-11-19",
+            "test_start": "2022-12-24",
+            "test_end": "2023-03-18"
+          }
+        ],
+        "n_folds": 5,
+        "target_mode": "level",
+        "estimators": [
+          "baseline_drift",
+          "baseline_mean",
+          "baseline_persistence",
+          "gradient_boosting",
+          "random_forest",
+          "ridge"
+        ],
+        "baselines_skipped": []
+      },
+      "h0_wbe+ar": {
+        "folds": [
+          {
+            "fold": 0,
+            "n_train": 220,
+            "n_test": 119,
+            "train_end": "2021-10-16",
+            "test_start": "2021-11-20",
+            "test_end": "2022-02-12"
+          },
+          {
+            "fold": 1,
+            "n_train": 326,
+            "n_test": 201,
+            "train_end": "2022-01-22",
+            "test_start": "2022-02-26",
+            "test_end": "2022-05-21"
+          },
+          {
+            "fold": 2,
+            "n_train": 528,
+            "n_test": 207,
+            "train_end": "2022-04-30",
+            "test_start": "2022-06-04",
+            "test_end": "2022-08-27"
+          },
+          {
+            "fold": 3,
+            "n_train": 751,
+            "n_test": 216,
+            "train_end": "2022-08-06",
+            "test_start": "2022-09-10",
+            "test_end": "2022-12-03"
+          },
+          {
+            "fold": 4,
+            "n_train": 1000,
+            "n_test": 199,
+            "train_end": "2022-11-19",
+            "test_start": "2022-12-24",
+            "test_end": "2023-03-18"
+          }
+        ],
+        "n_folds": 5,
+        "target_mode": "level",
+        "estimators": [
+          "baseline_drift",
+          "baseline_mean",
+          "baseline_persistence",
+          "gradient_boosting",
+          "random_forest",
+          "ridge"
+        ],
+        "baselines_skipped": []
+      },
+      "h1_wbe": {
+        "folds": [
+          {
+            "fold": 0,
+            "n_train": 224,
+            "n_test": 125,
+            "train_end": "2021-10-23",
+            "test_start": "2021-11-27",
+            "test_end": "2022-02-19"
+          },
+          {
+            "fold": 1,
+            "n_train": 323,
+            "n_test": 200,
+            "train_end": "2022-01-22",
+            "test_start": "2022-02-26",
+            "test_end": "2022-05-21"
+          },
+          {
+            "fold": 2,
+            "n_train": 525,
+            "n_test": 205,
+            "train_end": "2022-04-30",
+            "test_start": "2022-06-04",
+            "test_end": "2022-08-27"
+          },
+          {
+            "fold": 3,
+            "n_train": 745,
+            "n_test": 215,
+            "train_end": "2022-08-06",
+            "test_start": "2022-09-10",
+            "test_end": "2022-12-03"
+          },
+          {
+            "fold": 4,
+            "n_train": 976,
+            "n_test": 197,
+            "train_end": "2022-11-12",
+            "test_start": "2022-12-17",
+            "test_end": "2023-03-11"
+          }
+        ],
+        "n_folds": 5,
+        "target_mode": "level",
+        "estimators": [
+          "baseline_mean",
+          "gradient_boosting",
+          "random_forest",
+          "ridge"
+        ],
+        "baselines_skipped": [
+          "persistence",
+          "drift"
+        ]
+      },
+      "h1_ar": {
+        "folds": [
+          {
+            "fold": 0,
+            "n_train": 220,
+            "n_test": 114,
+            "train_end": "2021-09-25",
+            "test_start": "2021-10-30",
+            "test_end": "2022-01-22"
+          },
+          {
+            "fold": 1,
+            "n_train": 326,
+            "n_test": 206,
+            "train_end": "2022-01-01",
+            "test_start": "2022-02-05",
+            "test_end": "2022-04-30"
+          },
+          {
+            "fold": 2,
+            "n_train": 542,
+            "n_test": 203,
+            "train_end": "2022-04-16",
+            "test_start": "2022-05-21",
+            "test_end": "2022-08-13"
+          },
+          {
+            "fold": 3,
+            "n_train": 781,
+            "n_test": 215,
+            "train_end": "2022-07-30",
+            "test_start": "2022-09-03",
+            "test_end": "2022-11-26"
+          },
+          {
+            "fold": 4,
+            "n_train": 1027,
+            "n_test": 209,
+            "train_end": "2022-11-12",
+            "test_start": "2022-12-17",
+            "test_end": "2023-03-11"
+          }
+        ],
+        "n_folds": 5,
+        "target_mode": "level",
+        "estimators": [
+          "baseline_drift",
+          "baseline_mean",
+          "baseline_persistence",
+          "gradient_boosting",
+          "random_forest",
+          "ridge"
+        ],
+        "baselines_skipped": []
+      },
+      "h1_wbe+ar": {
+        "folds": [
+          {
+            "fold": 0,
+            "n_train": 224,
+            "n_test": 125,
+            "train_end": "2021-10-23",
+            "test_start": "2021-11-27",
+            "test_end": "2022-02-19"
+          },
+          {
+            "fold": 1,
+            "n_train": 323,
+            "n_test": 200,
+            "train_end": "2022-01-22",
+            "test_start": "2022-02-26",
+            "test_end": "2022-05-21"
+          },
+          {
+            "fold": 2,
+            "n_train": 525,
+            "n_test": 205,
+            "train_end": "2022-04-30",
+            "test_start": "2022-06-04",
+            "test_end": "2022-08-27"
+          },
+          {
+            "fold": 3,
+            "n_train": 745,
+            "n_test": 215,
+            "train_end": "2022-08-06",
+            "test_start": "2022-09-10",
+            "test_end": "2022-12-03"
+          },
+          {
+            "fold": 4,
+            "n_train": 976,
+            "n_test": 197,
+            "train_end": "2022-11-12",
+            "test_start": "2022-12-17",
+            "test_end": "2023-03-11"
+          }
+        ],
+        "n_folds": 5,
+        "target_mode": "level",
+        "estimators": [
+          "baseline_drift",
+          "baseline_mean",
+          "baseline_persistence",
+          "gradient_boosting",
+          "random_forest",
+          "ridge"
+        ],
+        "baselines_skipped": []
+      },
+      "h2_wbe": {
+        "folds": [
+          {
+            "fold": 0,
+            "n_train": 223,
+            "n_test": 125,
+            "train_end": "2021-10-23",
+            "test_start": "2021-11-27",
+            "test_end": "2022-02-19"
+          },
+          {
+            "fold": 1,
+            "n_train": 322,
+            "n_test": 200,
+            "train_end": "2022-01-22",
+            "test_start": "2022-02-26",
+            "test_end": "2022-05-21"
+          },
+          {
+            "fold": 2,
+            "n_train": 524,
+            "n_test": 204,
+            "train_end": "2022-04-30",
+            "test_start": "2022-06-04",
+            "test_end": "2022-08-27"
+          },
+          {
+            "fold": 3,
+            "n_train": 728,
+            "n_test": 215,
+            "train_end": "2022-07-30",
+            "test_start": "2022-09-03",
+            "test_end": "2022-11-26"
+          },
+          {
+            "fold": 4,
+            "n_train": 957,
+            "n_test": 195,
+            "train_end": "2022-11-05",
+            "test_start": "2022-12-10",
+            "test_end": "2023-03-04"
+          }
+        ],
+        "n_folds": 5,
+        "target_mode": "level",
+        "estimators": [
+          "baseline_mean",
+          "gradient_boosting",
+          "random_forest",
+          "ridge"
+        ],
+        "baselines_skipped": [
+          "persistence",
+          "drift"
+        ]
+      },
+      "h2_ar": {
+        "folds": [
+          {
+            "fold": 0,
+            "n_train": 219,
+            "n_test": 113,
+            "train_end": "2021-09-25",
+            "test_start": "2021-10-30",
+            "test_end": "2022-01-22"
+          },
+          {
+            "fold": 1,
+            "n_train": 324,
+            "n_test": 206,
+            "train_end": "2022-01-01",
+            "test_start": "2022-02-05",
+            "test_end": "2022-04-30"
+          },
+          {
+            "fold": 2,
+            "n_train": 540,
+            "n_test": 202,
+            "train_end": "2022-04-16",
+            "test_start": "2022-05-21",
+            "test_end": "2022-08-13"
+          },
+          {
+            "fold": 3,
+            "n_train": 763,
+            "n_test": 215,
+            "train_end": "2022-07-23",
+            "test_start": "2022-08-27",
+            "test_end": "2022-11-19"
+          },
+          {
+            "fold": 4,
+            "n_train": 1007,
+            "n_test": 207,
+            "train_end": "2022-11-05",
+            "test_start": "2022-12-10",
+            "test_end": "2023-03-04"
+          }
+        ],
+        "n_folds": 5,
+        "target_mode": "level",
+        "estimators": [
+          "baseline_drift",
+          "baseline_mean",
+          "baseline_persistence",
+          "gradient_boosting",
+          "random_forest",
+          "ridge"
+        ],
+        "baselines_skipped": []
+      },
+      "h2_wbe+ar": {
+        "folds": [
+          {
+            "fold": 0,
+            "n_train": 223,
+            "n_test": 125,
+            "train_end": "2021-10-23",
+            "test_start": "2021-11-27",
+            "test_end": "2022-02-19"
+          },
+          {
+            "fold": 1,
+            "n_train": 322,
+            "n_test": 200,
+            "train_end": "2022-01-22",
+            "test_start": "2022-02-26",
+            "test_end": "2022-05-21"
+          },
+          {
+            "fold": 2,
+            "n_train": 524,
+            "n_test": 204,
+            "train_end": "2022-04-30",
+            "test_start": "2022-06-04",
+            "test_end": "2022-08-27"
+          },
+          {
+            "fold": 3,
+            "n_train": 728,
+            "n_test": 215,
+            "train_end": "2022-07-30",
+            "test_start": "2022-09-03",
+            "test_end": "2022-11-26"
+          },
+          {
+            "fold": 4,
+            "n_train": 957,
+            "n_test": 195,
+            "train_end": "2022-11-05",
+            "test_start": "2022-12-10",
+            "test_end": "2023-03-04"
+          }
+        ],
+        "n_folds": 5,
+        "target_mode": "level",
+        "estimators": [
+          "baseline_drift",
+          "baseline_mean",
+          "baseline_persistence",
+          "gradient_boosting",
+          "random_forest",
+          "ridge"
+        ],
+        "baselines_skipped": []
+      }
+    },
+    "block_comparisons": [
+      {
+        "estimator": "ridge",
+        "reference": "ar",
+        "challenger": "wbe+ar",
+        "n_paired_rows": 833,
+        "rmse_reference": 0.22765459788652448,
+        "rmse_challenger": 0.2268600608026763,
+        "delta_rmse": -0.0007945370838481902,
+        "ci95_low": -0.010265633939338017,
+        "ci95_high": 0.008689567923309117,
+        "p_a_better": 0.575,
+        "horizon": 0
+      },
+      {
+        "estimator": "ridge",
+        "reference": "ar",
+        "challenger": "wbe",
+        "n_paired_rows": 833,
+        "rmse_reference": 0.22765459788652448,
+        "rmse_challenger": 1.0386873059854578,
+        "delta_rmse": 0.8110327080989332,
+        "ci95_low": 0.7573977161546867,
+        "ci95_high": 0.866200081651211,
+        "p_a_better": 0.0,
+        "horizon": 0
+      },
+      {
+        "estimator": "ridge",
+        "reference": "ar",
+        "challenger": "wbe+ar",
+        "n_paired_rows": 846,
+        "rmse_reference": 0.4143846149123834,
+        "rmse_challenger": 0.4065019192590366,
+        "delta_rmse": -0.00788269565334676,
+        "ci95_low": -0.02878656648714367,
+        "ci95_high": 0.015025382617500244,
+        "p_a_better": 0.7325,
+        "horizon": 1
+      },
+      {
+        "estimator": "ridge",
+        "reference": "ar",
+        "challenger": "wbe",
+        "n_paired_rows": 846,
+        "rmse_reference": 0.4143846149123834,
+        "rmse_challenger": 1.0875491444421548,
+        "delta_rmse": 0.6731645295297715,
+        "ci95_low": 0.6184435628468166,
+        "ci95_high": 0.7336382071159575,
+        "p_a_better": 0.0,
+        "horizon": 1
+      },
+      {
+        "estimator": "ridge",
+        "reference": "ar",
+        "challenger": "wbe+ar",
+        "n_paired_rows": 860,
+        "rmse_reference": 0.5628305292543995,
+        "rmse_challenger": 0.5378794284672517,
+        "delta_rmse": -0.024951100787147795,
+        "ci95_low": -0.05419027412339623,
+        "ci95_high": 0.0051430443941055,
+        "p_a_better": 0.9485,
+        "horizon": 2
+      },
+      {
+        "estimator": "ridge",
+        "reference": "ar",
+        "challenger": "wbe",
+        "n_paired_rows": 860,
+        "rmse_reference": 0.5628305292543995,
+        "rmse_challenger": 1.0495615820790671,
+        "delta_rmse": 0.48673105282466766,
+        "ci95_low": 0.4340619775532098,
+        "ci95_high": 0.5436878779398174,
+        "p_a_better": 0.0,
+        "horizon": 2
+      }
+    ],
+    "conformal_coverage": [
+      {
+        "alpha": 0.2,
+        "nominal_coverage": 0.8,
+        "empirical_coverage": 0.9270959902794653,
+        "n_calibrated": 823,
+        "median_interval_width": 3.691772149773834,
+        "horizon": 0,
+        "block": "wbe",
+        "estimator": "ridge"
+      },
+      {
+        "alpha": 0.2,
+        "nominal_coverage": 0.8,
+        "empirical_coverage": 0.9164677804295943,
+        "n_calibrated": 838,
+        "median_interval_width": 0.5629810522422583,
+        "horizon": 0,
+        "block": "ar",
+        "estimator": "ridge"
+      },
+      {
+        "alpha": 0.2,
+        "nominal_coverage": 0.8,
+        "empirical_coverage": 0.9040097205346294,
+        "n_calibrated": 823,
+        "median_interval_width": 0.5796999191434229,
+        "horizon": 0,
+        "block": "wbe+ar",
+        "estimator": "ridge"
+      },
+      {
+        "alpha": 0.2,
+        "nominal_coverage": 0.8,
+        "empirical_coverage": 0.9290085679314566,
+        "n_calibrated": 817,
+        "median_interval_width": 3.817506544339037,
+        "horizon": 1,
+        "block": "wbe",
+        "estimator": "ridge"
+      },
+      {
+        "alpha": 0.2,
+        "nominal_coverage": 0.8,
+        "empirical_coverage": 0.9243697478991597,
+        "n_calibrated": 833,
+        "median_interval_width": 1.003967272866122,
+        "horizon": 1,
+        "block": "ar",
+        "estimator": "ridge"
+      },
+      {
+        "alpha": 0.2,
+        "nominal_coverage": 0.8,
+        "empirical_coverage": 0.9167686658506732,
+        "n_calibrated": 817,
+        "median_interval_width": 1.0018435341540668,
+        "horizon": 1,
+        "block": "wbe+ar",
+        "estimator": "ridge"
+      },
+      {
+        "alpha": 0.2,
+        "nominal_coverage": 0.8,
+        "empirical_coverage": 0.9398034398034398,
+        "n_calibrated": 814,
+        "median_interval_width": 3.6433931708294223,
+        "horizon": 2,
+        "block": "wbe",
+        "estimator": "ridge"
+      },
+      {
+        "alpha": 0.2,
+        "nominal_coverage": 0.8,
+        "empirical_coverage": 0.9506024096385542,
+        "n_calibrated": 830,
+        "median_interval_width": 1.3424578145331925,
+        "horizon": 2,
+        "block": "ar",
+        "estimator": "ridge"
+      },
+      {
+        "alpha": 0.2,
+        "nominal_coverage": 0.8,
+        "empirical_coverage": 0.9373464373464373,
+        "n_calibrated": 814,
+        "median_interval_width": 1.3931024663820466,
+        "horizon": 2,
+        "block": "wbe+ar",
+        "estimator": "ridge"
+      }
+    ]
+  },
+  "notes": [
+    "Rolling-origin CV is the reported protocol. Random k-fold results are included only to quantify the optimism it introduces on autocorrelated panel data."
+  ]
+}

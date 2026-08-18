@@ -1,7 +1,13 @@
 omics-prediction
 omics-prediction.pub
 
-# Pipeline-generated data (synthetic, regenerable via collect_data.py)
+# Data is never committed. Two separate reasons:
+#  * data/raw/ holds third-party datasets that must NOT be redistributed - their
+#    licences differ and one (NYT county series) is non-commercial only. See
+#    docs/DATA_ACQUISITION.md for retrieval instructions and checksums.
+#  * data/interim/ and the demo pipeline's data/ are regenerable outputs.
+# Derived results (results/wbe/) ARE committed: they are the evidence for the
+# published findings and are small enough to version.
 data/
 
 # Python

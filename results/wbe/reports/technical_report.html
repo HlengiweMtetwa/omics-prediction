@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Omics WBE — Technical Results Report</title>
+<style>
+:root { --fg:#1b1f24; --bg:#ffffff; --muted:#5a6472; --line:#dfe3e8; --accent:#1b6ca8; }
+@media (prefers-color-scheme: dark) {
+  :root { --fg:#e6e9ee; --bg:#14171c; --muted:#9aa4b2; --line:#2b3038; --accent:#6db3e8; }
+}
+body { background:var(--bg); color:var(--fg); font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       max-width:900px; margin:0 auto; padding:2rem 1.25rem; }
+h1,h2,h3,h4 { line-height:1.25; margin-top:2rem; }
+h1 { border-bottom:2px solid var(--accent); padding-bottom:.4rem; }
+h2 { border-bottom:1px solid var(--line); padding-bottom:.3rem; }
+table { border-collapse:collapse; width:100%; margin:1rem 0; font-size:.88em; display:block; overflow-x:auto; }
+th,td { border:1px solid var(--line); padding:.35rem .55rem; text-align:left; white-space:nowrap; }
+th { background:color-mix(in srgb, var(--accent) 12%, transparent); }
+pre { background:color-mix(in srgb, var(--fg) 6%, transparent); padding:.9rem; overflow-x:auto; border-radius:6px; font-size:.85em; }
+code { background:color-mix(in srgb, var(--fg) 8%, transparent); padding:.1rem .3rem; border-radius:3px; font-size:.9em; }
+blockquote { border-left:3px solid var(--accent); margin:1rem 0; padding:.4rem 1rem; color:var(--muted); }
+figure { margin:1.5rem 0; } img { max-width:100%; height:auto; border:1px solid var(--line); border-radius:6px; }
+figcaption { color:var(--muted); font-size:.85em; margin-top:.4rem; }
+hr { border:none; border-top:1px solid var(--line); margin:2rem 0; }
+li { margin:.25rem 0; }
+</style></head><body>
+<h1>Omics-Based Wastewater Surveillance: Technical Results Report</h1>
+<p><strong>Project</strong> — Omics Approaches to Predictive Prevention Tools for Disease</p>
+<p>Surveillance Through Wastewater-Based Epidemiology</p>
+<p><strong>Generated</strong> — 2026-08-18 (automatically, from <code>results/wbe/study_results.json</code>)</p>
+<blockquote>Every figure in this document is produced by <code>omics_wbe.study.run_study()</code>.</blockquote>
+<blockquote>Re-running the pipeline regenerates this report, so the prose cannot drift</blockquote>
+<blockquote>away from the results.</blockquote>
+<hr>
+<h2>Executive summary</h2>
+<p>Analysis of <strong>137,711 wastewater measurements</strong></p>
+<p>submitted to the US National Wastewater Surveillance System from California</p>
+<p>(March 2020 – January 2024), linked to county-level reported COVID-19 cases,</p>
+<p>supports four findings.</p>
+<p>1. **The wastewater signal leads reported cases by</p>
+<p>   3 week(s)** (peak median Spearman</p>
+<p>   ρ = 0.568 across 17 counties).</p>
+<p>2. <strong>Wastewater predicts <em>change</em>, not <em>level</em>.</strong> A within-site standardised</p>
+<p>   signal has no information about a county&#x27;s absolute case rate — standardisation</p>
+<p>   removed exactly that — and a level model built on it fails</p>
+<p>   (R² &lt; 0). Re-framed onto the change in log case rate, the same signal is</p>
+<p>   genuinely predictive.</p>
+<p>3. <strong>Wastewater&#x27;s distinct value is early warning, not magnitude forecasting.</strong></p>
+<p>   For two-week-ahead surge detection the best model reaches AUPRC</p>
+<p>   0.337 against a base rate of</p>
+<p>   0.103 — a</p>
+<p>   3.3× lift —</p>
+<p>   and shows positive decision-curve net benefit across the plausible threshold</p>
+<p>   range. Models with the wastewater block reach AUPRC 0.337 (<code>wbe+ar</code>) against 0.138 for clinical autoregression alone — a 2.4x advantage on the task that matters most for early warning.</p>
+<p>4. <strong>The validation protocol matters more than the model.</strong> Random k-fold</p>
+<p>   cross-validation, as specified in the original proposal, understates error on</p>
+<p>   this panel; for the wastewater-only level model it inflates R² by</p>
+<p>   0.918.</p>
+<p>   All headline results use rolling-origin validation with a</p>
+<p>   4-week gap, and <strong>causal</strong> feature</p>
+<p>   standardisation — features at week <em>t</em> use only data available at week <em>t</em>.</p>
+<hr>
+<h2>1. Data and provenance</h2>
+<table>
+<tr><th>Source</th><th>Role</th><th>Records</th><th>Period</th></tr>
+<tr><td>CDC NWSS (California submissions)</td><td>wastewater measurements</td><td>137,711 read, 116,237 mapped</td><td>2020-03-18 to 2024-01-17</td></tr>
+<tr><td>NYT county COVID-19 series</td><td>public health records</td><td>17 counties modelled</td><td>to 2023-03</td></tr>
+<tr><td>Queensland wastewater programme</td><td>second programme (detect/non-detect)</td><td>122 sites</td><td>2020-07 to 2022-09</td></tr>
+</table>
+<p>Sequence archives named in the proposal (NCBI SRA, ENA, DDBJ) are implemented as</p>
+<p>connectors in <code>omics_wbe.ingest.sequence_archives</code>, but **no records were mined</p>
+<p>from them**: outbound access to those hosts is blocked in the execution</p>
+<p>environment used here, and — separately — archive records are <em>sequencing runs</em>,</p>
+<p>not quantified biomarker concentrations. <code>plan_quantification()</code> enumerates the</p>
+<p>read-processing steps that would be required to close that gap.</p>
+<h2>2. Objective 1 — detection methodology</h2>
+<h3>2.1 Biomarker catalogue</h3>
+<p>The catalogue holds <strong>36 biomarkers</strong> across 22 genomic, 12 metabolomic and 2 proteomic entries, backed by 24 peer-reviewed references, and spanning 16 communicable-disease, 8 non-communicable-disease, 4 antimicrobial-resistance and 4 chemical-exposure targets.</p>
+<p>Each entry carries an evidence tier — 19 established, 13 emerging, 4 prospective. Prospective markers are listed to fix the schema and record the open question; <code>inference_ready()</code> refuses them for any published claim. Only 1 marker has a transferable literature excretion fraction, which is itself the finding for the non-communicable-disease arm.</p>
+<p>Full catalogue: <code>results/wbe/tables/biomarker_catalog.csv</code>.</p>
+<h3>2.2 Harmonisation of submission conventions</h3>
+<p>Two conventions in the NWSS submissions would each have destroyed most of the</p>
+<p>dataset if taken at face value.</p>
+<li><strong>Recovery scale.</strong> 88,237</li>
+<p>  rows report process recovery as a <em>ratio</em> (median ≈ 1.2) while the rest report</p>
+<p>  a <em>percent</em> (median ≈ 60). Read globally as percent, 81% of the dataset</p>
+<p>  appears to fail a recovery acceptance window. Scale is inferred per</p>
+<p>  submission group and recorded.</p>
+<li><strong>Censoring flag.</strong> 37,963</li>
+<p>  rows report a concentration of exactly zero with the below-LOD flag left</p>
+<p>  empty. Censoring is inferred and marked as inferred.</p>
+<p>After harmonisation, **97,960 of</p>
+<p>116,237 measurements pass QC</p>
+<p>(84.3%)**.</p>
+<table>
+<tr><th>code</th><th>severity</th><th>description</th><th>n_violations</th><th>pct_violations</th></tr>
+<tr><td>QC001</td><td>fail</td><td>No-template control amplified</td><td>17</td><td>0.015</td></tr>
+<tr><td>QC002</td><td>fail</td><td>PCR inhibition detected</td><td>1,326</td><td>1.141</td></tr>
+<tr><td>QC003</td><td>fail</td><td>Process recovery outside acceptable range</td><td>17,011</td><td>14.635</td></tr>
+<tr><td>QC004</td><td>fail</td><td>Negative reported concentration</td><td>14</td><td>0.012</td></tr>
+<tr><td>QC007</td><td>warn</td><td>Analytical replicate present for this sample and target</td><td>9,066</td><td>7.800</td></tr>
+<tr><td>QC010</td><td>warn</td><td>No process recovery control reported</td><td>1,808</td><td>1.555</td></tr>
+<tr><td>QC011</td><td>warn</td><td>Below-LOD flag inconsistent with reported concentration</td><td>79</td><td>0.068</td></tr>
+<tr><td>QC012</td><td>warn</td><td>Faecal normaliser not measured</td><td>1,450</td><td>1.248</td></tr>
+<tr><td>QC013</td><td>warn</td><td>Robust outlier within site and target series</td><td>36</td><td>0.031</td></tr>
+</table>
+<figure><img src="../figures/fig01_qc_waterfall.png" alt="QC exclusions"><figcaption>QC exclusions</figcaption></figure>
+<h3>2.3 Multi-pathogen coverage</h3>
+<table>
+<tr><th>target</th><th>sites</th><th>weeks</th><th>site_weeks</th><th>mean_detect_fraction</th><th>first_week</th><th>last_week</th></tr>
+<tr><td>sars_cov_2</td><td>90</td><td>199</td><td>6,790</td><td>0.987</td><td>2020-03-21 00:00:00</td><td>2024-01-20 00:00:00</td></tr>
+<tr><td>rsv</td><td>76</td><td>106</td><td>4,449</td><td>0.588</td><td>2022-01-15 00:00:00</td><td>2024-01-20 00:00:00</td></tr>
+<tr><td>influenza_a</td><td>76</td><td>106</td><td>3,875</td><td>0.397</td><td>2022-01-15 00:00:00</td><td>2024-01-20 00:00:00</td></tr>
+<tr><td>hmpxv</td><td>50</td><td>84</td><td>3,372</td><td>0.040</td><td>2022-06-18 00:00:00</td><td>2024-01-20 00:00:00</td></tr>
+<tr><td>norovirus_gii</td><td>50</td><td>63</td><td>2,719</td><td>1.000</td><td>2022-11-12 00:00:00</td><td>2024-01-20 00:00:00</td></tr>
+<tr><td>influenza_b</td><td>50</td><td>65</td><td>2,719</td><td>0.130</td><td>2022-06-11 00:00:00</td><td>2024-01-20 00:00:00</td></tr>
+<tr><td>sars_cov_2_del69_70</td><td>50</td><td>66</td><td>2,478</td><td>0.622</td><td>2022-06-11 00:00:00</td><td>2023-09-09 00:00:00</td></tr>
+<tr><td>sars_cov_2_s</td><td>63</td><td>71</td><td>2,184</td><td>0.980</td><td>2022-01-08 00:00:00</td><td>2023-05-13 00:00:00</td></tr>
+<tr><td>candida_auris</td><td>49</td><td>28</td><td>964</td><td>0.012</td><td>2023-07-15 00:00:00</td><td>2024-01-20 00:00:00</td></tr>
+<tr><td>legionella_pneumophila</td><td>19</td><td>32</td><td>346</td><td>0.983</td><td>2022-02-12 00:00:00</td><td>2022-09-17 00:00:00</td></tr>
+<tr><td>sars_cov_2_del143_145</td><td>15</td><td>20</td><td>208</td><td>0.637</td><td>2022-01-15 00:00:00</td><td>2022-05-28 00:00:00</td></tr>
+</table>
+<figure><img src="../figures/fig02_target_coverage.png" alt="Coverage"><figcaption>Coverage</figcaption></figure>
+<p>Series that are almost entirely non-detects are excluded from quantitative</p>
+<p>modelling automatically: with 98% censoring, <em>Candida auris</em> values sit at the</p>
+<p>substituted <code>LOD/√2</code> and its robust scale collapses towards zero, so trivial</p>
+<p>differences in the reported detection limit produced |z| &gt; 3 in weeks when</p>
+<p>nothing was detected at all. The detect-fraction gate removes those series</p>
+<p>rather than letting them contribute artefacts.</p>
+<h3>2.4 Non-communicable disease: back-calculation</h3>
+<p>The mass-balance engine converts an influent concentration into a treated-prevalence estimate. Using metformin (the one catalogue marker with a literature excretion fraction) and scenario inputs — 12,000 ng/L, 50,000,000 L/day, 250,000 people — the correction factor is 2.02 and the estimated treated prevalence is <strong>0.25% (95% CI 0.14–0.48%)</strong>.</p>
+<p>The interval spans a factor of 1.3 relative to the median, from parameter uncertainty alone — and that excludes the larger structural question of whether published excretion parameters transfer to this population at all. For 5 of the other non-communicable-disease markers the engine <strong>refuses to run</strong>, because no transferable excretion parameter exists:</p>
+<li><code>cortisol_cortisone</code> — cortisol_cortisone: excretion parameters are &#x27;requires_local_calibration&#x27;</li>
+<li><code>isoprostane_8_iso_pgf2a</code> — isoprostane_8_iso_pgf2a: excretion parameters are &#x27;requires_local_calibration&#x27;</li>
+<li><code>atorvastatin_ohmetabolites</code> — atorvastatin_ohmetabolites: excretion parameters are &#x27;requires_local_calibration&#x27;</li>
+<li><code>capecitabine_5fu</code> — capecitabine_5fu: excretion parameters are &#x27;requires_local_calibration&#x27;</li>
+<li><code>antihypertensive_panel</code> — antihypertensive_panel: excretion parameters are &#x27;requires_local_calibration&#x27;</li>
+<p>That refusal is the design. Producing a prevalence figure from an excretion fraction nobody has measured is the central failure mode of non-communicable-disease WBE, and it is prevented mechanically rather than by reviewer vigilance.</p>
+<p><strong>The inputs above are a scenario, not a measurement.</strong> No metformin data were obtainable.</p>
+<h2>3. Objective 2 — integration and prediction</h2>
+<p>The wastewater panel joins to county case records on region × epidemiological</p>
+<p>week, giving 1,906 joined region-weeks</p>
+<p>across 31 counties, of which</p>
+<p>17 have the ≥52 weeks of history a</p>
+<p>rolling-origin validation requires.</p>
+<h3>3.1 Lead time</h3>
+<figure><img src="../figures/fig03_lag_correlation.png" alt="Lag correlation"><figcaption>Lag correlation</figcaption></figure>
+<p>Median Spearman correlation peaks at **3 week(s)</p>
+<p>of wastewater lead** (ρ = 0.568). Per-county optimal lags:</p>
+<p>{&#x27;1&#x27;: 3, &#x27;2&#x27;: 9, &#x27;3&#x27;: 3, &#x27;5&#x27;: 1, &#x27;6&#x27;: 1}.</p>
+<p>11 of</p>
+<p>17 counties exceed ρ = 0.5 at their best lag.</p>
+<figure><img src="../figures/fig04_series.png" alt="Series"><figcaption>Series</figcaption></figure>
+<h3>3.2 Forecast performance</h3>
+<p>Target: <strong>change in log case rate</strong> between week <em>t−1</em> and week <em>t+h</em>.</p>
+<table>
+<tr><th>horizon</th><th>block</th><th>estimator</th><th>n</th><th>rmse</th><th>mae</th><th>r2</th><th>spearman</th><th>skill_vs_nochange</th></tr>
+<tr><td>0</td><td>wbe</td><td>random_forest</td><td>942</td><td>0.240</td><td>0.185</td><td>0.228</td><td>0.466</td><td>0.125</td></tr>
+<tr><td>0</td><td>wbe</td><td>ridge</td><td>942</td><td>0.241</td><td>0.174</td><td>0.220</td><td>0.498</td><td>0.121</td></tr>
+<tr><td>0</td><td>wbe</td><td>gradient_boosting</td><td>942</td><td>0.247</td><td>0.189</td><td>0.177</td><td>0.443</td><td>0.097</td></tr>
+<tr><td>0</td><td>wbe</td><td>baseline_nochange</td><td>942</td><td>0.274</td><td>0.196</td><td>-0.009</td><td>-</td><td>0.000</td></tr>
+<tr><td>0</td><td>wbe</td><td>baseline_mean</td><td>942</td><td>0.277</td><td>0.195</td><td>-0.033</td><td>-0.005</td><td>-0.012</td></tr>
+<tr><td>0</td><td>ar</td><td>ridge</td><td>950</td><td>0.223</td><td>0.162</td><td>0.386</td><td>0.564</td><td>0.222</td></tr>
+<tr><td>0</td><td>ar</td><td>random_forest</td><td>950</td><td>0.248</td><td>0.179</td><td>0.239</td><td>0.532</td><td>0.134</td></tr>
+<tr><td>0</td><td>ar</td><td>baseline_momentum</td><td>950</td><td>0.249</td><td>0.183</td><td>0.236</td><td>0.521</td><td>0.132</td></tr>
+<tr><td>0</td><td>ar</td><td>gradient_boosting</td><td>950</td><td>0.251</td><td>0.182</td><td>0.222</td><td>0.500</td><td>0.124</td></tr>
+<tr><td>0</td><td>ar</td><td>baseline_nochange</td><td>950</td><td>0.286</td><td>0.205</td><td>-0.015</td><td>-</td><td>0.000</td></tr>
+<tr><td>0</td><td>ar</td><td>baseline_mean</td><td>950</td><td>0.290</td><td>0.206</td><td>-0.039</td><td>-0.240</td><td>-0.012</td></tr>
+<tr><td>0</td><td>wbe+ar</td><td>ridge</td><td>942</td><td>0.221</td><td>0.161</td><td>0.343</td><td>0.563</td><td>0.193</td></tr>
+<tr><td>0</td><td>wbe+ar</td><td>random_forest</td><td>942</td><td>0.228</td><td>0.171</td><td>0.301</td><td>0.555</td><td>0.168</td></tr>
+<tr><td>0</td><td>wbe+ar</td><td>gradient_boosting</td><td>942</td><td>0.241</td><td>0.182</td><td>0.219</td><td>0.478</td><td>0.120</td></tr>
+<tr><td>0</td><td>wbe+ar</td><td>baseline_momentum</td><td>942</td><td>0.258</td><td>0.190</td><td>0.104</td><td>0.496</td><td>0.058</td></tr>
+<tr><td>0</td><td>wbe+ar</td><td>baseline_nochange</td><td>942</td><td>0.274</td><td>0.196</td><td>-0.009</td><td>-</td><td>0.000</td></tr>
+<tr><td>0</td><td>wbe+ar</td><td>baseline_mean</td><td>942</td><td>0.277</td><td>0.195</td><td>-0.033</td><td>-0.005</td><td>-0.012</td></tr>
+<tr><td>1</td><td>wbe</td><td>ridge</td><td>942</td><td>0.414</td><td>0.297</td><td>0.317</td><td>0.597</td><td>0.177</td></tr>
+<tr><td>1</td><td>wbe</td><td>random_forest</td><td>942</td><td>0.416</td><td>0.319</td><td>0.312</td><td>0.590</td><td>0.174</td></tr>
+<tr><td>1</td><td>wbe</td><td>gradient_boosting</td><td>942</td><td>0.428</td><td>0.327</td><td>0.269</td><td>0.578</td><td>0.148</td></tr>
+<tr><td>1</td><td>wbe</td><td>baseline_nochange</td><td>942</td><td>0.503</td><td>0.366</td><td>-0.009</td><td>-</td><td>0.000</td></tr>
+<tr><td>1</td><td>wbe</td><td>baseline_mean</td><td>942</td><td>0.504</td><td>0.361</td><td>-0.014</td><td>0.051</td><td>-0.003</td></tr>
+<tr><td>1</td><td>ar</td><td>ridge</td><td>947</td><td>0.410</td><td>0.292</td><td>0.337</td><td>0.570</td><td>0.191</td></tr>
+<tr><td>1</td><td>ar</td><td>baseline_momentum</td><td>947</td><td>0.430</td><td>0.309</td><td>0.272</td><td>0.488</td><td>0.153</td></tr>
+<tr><td>1</td><td>ar</td><td>gradient_boosting</td><td>947</td><td>0.450</td><td>0.319</td><td>0.201</td><td>0.508</td><td>0.112</td></tr>
+<tr><td>1</td><td>ar</td><td>random_forest</td><td>947</td><td>0.450</td><td>0.318</td><td>0.200</td><td>0.541</td><td>0.112</td></tr>
+<tr><td>1</td><td>ar</td><td>baseline_nochange</td><td>947</td><td>0.507</td><td>0.363</td><td>-0.014</td><td>-</td><td>0.000</td></tr>
+<tr><td>1</td><td>ar</td><td>baseline_mean</td><td>947</td><td>0.519</td><td>0.370</td><td>-0.062</td><td>-0.228</td><td>-0.023</td></tr>
+<tr><td>1</td><td>wbe+ar</td><td>ridge</td><td>942</td><td>0.391</td><td>0.287</td><td>0.390</td><td>0.622</td><td>0.222</td></tr>
+<tr><td>1</td><td>wbe+ar</td><td>random_forest</td><td>942</td><td>0.409</td><td>0.307</td><td>0.335</td><td>0.629</td><td>0.188</td></tr>
+<tr><td>1</td><td>wbe+ar</td><td>baseline_momentum</td><td>942</td><td>0.432</td><td>0.313</td><td>0.257</td><td>0.477</td><td>0.142</td></tr>
+<tr><td>1</td><td>wbe+ar</td><td>gradient_boosting</td><td>942</td><td>0.433</td><td>0.332</td><td>0.254</td><td>0.581</td><td>0.140</td></tr>
+<tr><td>1</td><td>wbe+ar</td><td>baseline_nochange</td><td>942</td><td>0.503</td><td>0.366</td><td>-0.009</td><td>-</td><td>0.000</td></tr>
+<tr><td>1</td><td>wbe+ar</td><td>baseline_mean</td><td>942</td><td>0.504</td><td>0.361</td><td>-0.014</td><td>0.051</td><td>-0.003</td></tr>
+<tr><td>2</td><td>wbe</td><td>ridge</td><td>939</td><td>0.562</td><td>0.403</td><td>0.346</td><td>0.632</td><td>0.195</td></tr>
+<tr><td>2</td><td>wbe</td><td>random_forest</td><td>939</td><td>0.588</td><td>0.444</td><td>0.283</td><td>0.602</td><td>0.158</td></tr>
+<tr><td>2</td><td>wbe</td><td>gradient_boosting</td><td>939</td><td>0.609</td><td>0.458</td><td>0.231</td><td>0.588</td><td>0.128</td></tr>
+<tr><td>2</td><td>wbe</td><td>baseline_mean</td><td>939</td><td>0.695</td><td>0.503</td><td>-0.001</td><td>0.098</td><td>0.004</td></tr>
+<tr><td>2</td><td>wbe</td><td>baseline_nochange</td><td>939</td><td>0.698</td><td>0.514</td><td>-0.010</td><td>-</td><td>0.000</td></tr>
+<tr><td>2</td><td>ar</td><td>ridge</td><td>943</td><td>0.558</td><td>0.403</td><td>0.330</td><td>0.576</td><td>0.189</td></tr>
+<tr><td>2</td><td>ar</td><td>baseline_momentum</td><td>943</td><td>0.608</td><td>0.435</td><td>0.204</td><td>0.448</td><td>0.116</td></tr>
+<tr><td>2</td><td>ar</td><td>random_forest</td><td>943</td><td>0.612</td><td>0.438</td><td>0.195</td><td>0.558</td><td>0.111</td></tr>
+<tr><td>2</td><td>ar</td><td>gradient_boosting</td><td>943</td><td>0.614</td><td>0.443</td><td>0.189</td><td>0.522</td><td>0.107</td></tr>
+<tr><td>2</td><td>ar</td><td>baseline_nochange</td><td>943</td><td>0.688</td><td>0.494</td><td>-0.018</td><td>-</td><td>0.000</td></tr>
+<tr><td>2</td><td>ar</td><td>baseline_mean</td><td>943</td><td>0.710</td><td>0.504</td><td>-0.085</td><td>-0.209</td><td>-0.032</td></tr>
+<tr><td>2</td><td>wbe+ar</td><td>ridge</td><td>939</td><td>0.524</td><td>0.389</td><td>0.431</td><td>0.646</td><td>0.250</td></tr>
+<tr><td>2</td><td>wbe+ar</td><td>random_forest</td><td>939</td><td>0.569</td><td>0.431</td><td>0.327</td><td>0.645</td><td>0.184</td></tr>
+<tr><td>2</td><td>wbe+ar</td><td>gradient_boosting</td><td>939</td><td>0.605</td><td>0.457</td><td>0.240</td><td>0.603</td><td>0.132</td></tr>
+<tr><td>2</td><td>wbe+ar</td><td>baseline_momentum</td><td>939</td><td>0.625</td><td>0.455</td><td>0.190</td><td>0.439</td><td>0.105</td></tr>
+<tr><td>2</td><td>wbe+ar</td><td>baseline_mean</td><td>939</td><td>0.695</td><td>0.503</td><td>-0.001</td><td>0.098</td><td>0.004</td></tr>
+<tr><td>2</td><td>wbe+ar</td><td>baseline_nochange</td><td>939</td><td>0.698</td><td>0.514</td><td>-0.010</td><td>-</td><td>0.000</td></tr>
+</table>
+<figure><img src="../figures/fig05_model_skill.png" alt="Model skill"><figcaption>Model skill</figcaption></figure>
+<p><strong>Incremental value of wastewater over clinical autoregression</strong> (paired bootstrap on shared test rows, ridge):</p>
+<table>
+<tr><th>horizon</th><th>RMSE (clinical only)</th><th>RMSE (+ wastewater)</th><th>ΔRMSE</th><th>95% CI</th><th>P(wastewater better)</th></tr>
+<tr><td>+0 wk</td><td>0.2270</td><td>0.2236</td><td>-0.0034</td><td>[-0.0123, 0.0057]</td><td>0.790</td></tr>
+<tr><td>+1 wk</td><td>0.4144</td><td>0.3952</td><td>-0.0192</td><td>[-0.0386, 0.0017]</td><td>0.964</td></tr>
+<tr><td>+2 wk</td><td>0.5602</td><td>0.5178</td><td>-0.0424</td><td>[-0.0694, -0.0156]</td><td>1.000</td></tr>
+</table>
+<p>The improvement is in the expected direction at 3 of 3 horizons, but its 95% interval excludes zero only at +2 wk. At the shorter horizons the point estimate favours adding wastewater while the interval still contains zero — suggestive, not established. Either way the effect is small: wastewater refines a forecast that clinical autoregression already makes well. Its distinct value shows up in early warning (§4), not in magnitude forecasting.</p>
+<h3>3.3 Why the level target fails</h3>
+<p>Asked to predict the <em>level</em> of the log case rate rather than its change, the</p>
+<p>wastewater-only model has negative R² at every horizon:</p>
+<table>
+<tr><th>horizon</th><th>block</th><th>estimator</th><th>n</th><th>rmse</th><th>mae</th><th>r2</th><th>spearman</th><th>skill_vs_mean</th></tr>
+<tr><td>0</td><td>wbe</td><td>random_forest</td><td>942</td><td>0.895</td><td>0.673</td><td>-0.081</td><td>0.293</td><td>0.109</td></tr>
+<tr><td>0</td><td>wbe</td><td>gradient_boosting</td><td>942</td><td>0.916</td><td>0.695</td><td>-0.133</td><td>0.282</td><td>0.087</td></tr>
+<tr><td>0</td><td>wbe</td><td>baseline_mean</td><td>942</td><td>1.004</td><td>0.757</td><td>-0.360</td><td>-0.391</td><td>0.000</td></tr>
+<tr><td>0</td><td>wbe</td><td>ridge</td><td>942</td><td>1.068</td><td>0.825</td><td>-0.539</td><td>0.298</td><td>-0.064</td></tr>
+<tr><td>1</td><td>wbe</td><td>random_forest</td><td>942</td><td>0.911</td><td>0.701</td><td>-0.168</td><td>0.263</td><td>0.100</td></tr>
+<tr><td>1</td><td>wbe</td><td>gradient_boosting</td><td>942</td><td>0.940</td><td>0.729</td><td>-0.245</td><td>0.241</td><td>0.071</td></tr>
+<tr><td>1</td><td>wbe</td><td>baseline_mean</td><td>942</td><td>1.012</td><td>0.774</td><td>-0.443</td><td>-0.453</td><td>0.000</td></tr>
+<tr><td>1</td><td>wbe</td><td>ridge</td><td>942</td><td>1.097</td><td>0.845</td><td>-0.694</td><td>0.252</td><td>-0.084</td></tr>
+<tr><td>2</td><td>wbe</td><td>random_forest</td><td>939</td><td>0.901</td><td>0.705</td><td>-0.218</td><td>0.252</td><td>0.094</td></tr>
+<tr><td>2</td><td>wbe</td><td>gradient_boosting</td><td>939</td><td>0.922</td><td>0.728</td><td>-0.277</td><td>0.259</td><td>0.072</td></tr>
+<tr><td>2</td><td>wbe</td><td>baseline_mean</td><td>939</td><td>0.994</td><td>0.766</td><td>-0.483</td><td>-0.478</td><td>0.000</td></tr>
+<tr><td>2</td><td>wbe</td><td>ridge</td><td>939</td><td>1.073</td><td>0.826</td><td>-0.729</td><td>0.210</td><td>-0.080</td></tr>
+</table>
+<p>This is not a modelling failure but a measurement one. Within-site</p>
+<p>standardisation deliberately removes each catchment&#x27;s own scale so that a solids</p>
+<p>matrix and a liquid matrix can be pooled; that same operation removes the</p>
+<p>information needed to state an absolute case rate. A level prediction requires</p>
+<p>an absolute, recovery-corrected, flow-normalised load — which these submissions</p>
+<p>support for only 74,468 of the</p>
+<p>liquid-matrix measurements, since flow is reported for a minority of samples.</p>
+<h3>3.4 Two leakage channels, both closed</h3>
+<p>Feature construction leaks as easily as validation does, and both were live in</p>
+<p>an earlier version of this analysis.</p>
+<p><strong>Retrospective standardisation.</strong> Robust within-site z-scores computed over the</p>
+<p>whole series standardise a March 2021 sample partly by measurements taken in</p>
+<p>2023. All headline features use the causal expanding-window variant (<code>_zc</code>); the</p>
+<p>retrospective variant appears in the specification curve (§5.3) only as the</p>
+<p>optimistic comparison.</p>
+<p><strong>Validation folds.</strong> Random k-fold places week <em>t−1</em> of a county in training</p>
+<p>and week <em>t</em> in test. All headline results use rolling-origin splits with a</p>
+<p>4-week gap, at least as long as the longest</p>
+<p>feature lag.</p>
+<p>A third choice is not leakage but matters as much. The standardised signal is</p>
+<p><strong>winsorised at ±3 robust SD</strong></p>
+<p>(6.191% of region-weeks affected). A robust</p>
+<p>z-score of a series containing an epidemic excursion is heavily tailed — the</p>
+<p>post-Omicron collapse reaches −27 here. Ridge regression on the unwinsorised</p>
+<p>causal signal reaches R² of −4.5; gradient boosting on the identical input is</p>
+<p>essentially unaffected, because trees are invariant to monotone transforms of a</p>
+<p>feature. §5.3 reports performance across winsorisation limits rather than</p>
+<p>resting on the chosen one.</p>
+<h3>3.5 Validation protocol</h3>
+<figure><img src="../figures/fig06_optimism.png" alt="Optimism"><figcaption>Optimism</figcaption></figure>
+<table>
+<tr><th>block</th><th>estimator</th><th>rmse_rolling_origin</th><th>rmse_random_kfold</th><th>rmse_ratio_kfold_over_rolling</th><th>r2_inflation_kfold_minus_rolling</th></tr>
+<tr><td>ar</td><td>gradient_boosting</td><td>0.450</td><td>0.353</td><td>0.785</td><td>0.259</td></tr>
+<tr><td>ar</td><td>random_forest</td><td>0.450</td><td>0.344</td><td>0.764</td><td>0.288</td></tr>
+<tr><td>ar</td><td>ridge</td><td>0.410</td><td>0.360</td><td>0.877</td><td>0.103</td></tr>
+<tr><td>wbe</td><td>gradient_boosting</td><td>0.428</td><td>0.349</td><td>0.814</td><td>0.203</td></tr>
+<tr><td>wbe</td><td>random_forest</td><td>0.416</td><td>0.337</td><td>0.812</td><td>0.193</td></tr>
+<tr><td>wbe</td><td>ridge</td><td>0.414</td><td>0.368</td><td>0.889</td><td>0.094</td></tr>
+<tr><td>wbe+ar</td><td>gradient_boosting</td><td>0.433</td><td>0.301</td><td>0.697</td><td>0.351</td></tr>
+<tr><td>wbe+ar</td><td>random_forest</td><td>0.409</td><td>0.290</td><td>0.710</td><td>0.299</td></tr>
+<tr><td>wbe+ar</td><td>ridge</td><td>0.391</td><td>0.331</td><td>0.845</td><td>0.135</td></tr>
+</table>
+<h2>4. Objective 3 — actionable public health value</h2>
+<h3>4.1 Control-chart alarms and lead time</h3>
+<p>Applying an identical causal EWMA control chart to both the wastewater and the</p>
+<p>clinical series, across 14</p>
+<p>counties:</p>
+<li>wastewater alarms raised: 29</li>
+<li>clinical events: 23</li>
+<li>pooled sensitivity: 0.435</li>
+<li>pooled precision: 0.345</li>
+<li>median lead: 1.000 weeks</li>
+<p>A simple threshold rule on the raw signal is therefore a weak detector on its</p>
+<p>own. The trained classifier below is substantially better, which is the</p>
+<p>practical argument for a model rather than a control chart.</p>
+<h3>4.2 Surge classification</h3>
+<p>Surge defined relatively: log case rate rises by more than 0.5 (≈ 65%) over the</p>
+<p>next two weeks.</p>
+<table>
+<tr><th>block</th><th>estimator</th><th>n</th><th>prevalence</th><th>auroc</th><th>auprc</th><th>brier</th><th>brier_skill_vs_prevalence</th></tr>
+<tr><td>wbe</td><td>logistic</td><td>939</td><td>0.103</td><td>0.768</td><td>0.322</td><td>0.084</td><td>0.099</td></tr>
+<tr><td>wbe</td><td>gradient_boosting</td><td>939</td><td>0.103</td><td>0.746</td><td>0.274</td><td>0.089</td><td>0.039</td></tr>
+<tr><td>wbe</td><td>random_forest</td><td>939</td><td>0.103</td><td>0.785</td><td>0.273</td><td>0.088</td><td>0.049</td></tr>
+<tr><td>ar</td><td>logistic</td><td>943</td><td>0.078</td><td>0.651</td><td>0.138</td><td>0.072</td><td>0.007</td></tr>
+<tr><td>ar</td><td>random_forest</td><td>943</td><td>0.078</td><td>0.579</td><td>0.107</td><td>0.086</td><td>-0.184</td></tr>
+<tr><td>ar</td><td>gradient_boosting</td><td>943</td><td>0.078</td><td>0.521</td><td>0.098</td><td>0.081</td><td>-0.125</td></tr>
+<tr><td>wbe+ar</td><td>logistic</td><td>939</td><td>0.103</td><td>0.748</td><td>0.337</td><td>0.082</td><td>0.112</td></tr>
+<tr><td>wbe+ar</td><td>random_forest</td><td>939</td><td>0.103</td><td>0.743</td><td>0.237</td><td>0.090</td><td>0.032</td></tr>
+<tr><td>wbe+ar</td><td>gradient_boosting</td><td>939</td><td>0.103</td><td>0.754</td><td>0.235</td><td>0.088</td><td>0.053</td></tr>
+</table>
+<p>Tree probabilities are isotonically calibrated inside each training fold;</p>
+<p>uncalibrated, the same random forest discriminated well (AUROC ≈ 0.86) while</p>
+<p>scoring <em>worse than the base rate</em> on Brier, which would have made the decision</p>
+<p>curve meaningless.</p>
+<h3>4.3 Operating points</h3>
+<table>
+<tr><th>threshold</th><th>precision</th><th>recall</th><th>specificity</th><th>alerts_per_100_region_weeks</th></tr>
+<tr><td>0.100</td><td>0.189</td><td>0.732</td><td>0.638</td><td>40.043</td></tr>
+<tr><td>0.150</td><td>0.281</td><td>0.608</td><td>0.821</td><td>22.364</td></tr>
+<tr><td>0.200</td><td>0.359</td><td>0.433</td><td>0.911</td><td>12.460</td></tr>
+<tr><td>0.300</td><td>0.500</td><td>0.196</td><td>0.977</td><td>4.047</td></tr>
+<tr><td>0.400</td><td>0.588</td><td>0.103</td><td>0.992</td><td>1.810</td></tr>
+</table>
+<h3>4.4 Decision-curve analysis</h3>
+<figure><img src="../figures/fig07_alerts.png" alt="Alerts"><figcaption>Alerts</figcaption></figure>
+<p>The alert model shows positive net benefit over the better of &#x27;alert always&#x27; and &#x27;alert never&#x27; at <strong>23 of 30 thresholds tested</strong>, spanning decision thresholds 0.06–0.60, with a maximum advantage of 0.0359. In plain terms: for any decision-maker whose tolerance for a false alarm lies in that range, acting on this signal is better than either blanket policy. That is the concrete sense in which the wastewater signal is <em>actionable</em>, which is what Objective 3 asks.</p>
+<h2>5. Sensitivity analyses</h2>
+<h3>5.1 Feature importance</h3>
+<table>
+<tr><th>feature</th><th>rmse_increase</th><th>relative_increase</th></tr>
+<tr><td>ar_lag4</td><td>0.0168</td><td>0.0434</td></tr>
+<tr><td>ar_delta1</td><td>0.0115</td><td>0.0297</td></tr>
+<tr><td>wbe_lag4</td><td>0.0109</td><td>0.0282</td></tr>
+<tr><td>wbe_lag3</td><td>0.0088</td><td>0.0227</td></tr>
+<tr><td>ar_lag3</td><td>0.0051</td><td>0.0132</td></tr>
+<tr><td>wbe_slope3</td><td>0.0045</td><td>0.0115</td></tr>
+<tr><td>ar_lag2</td><td>0.0037</td><td>0.0097</td></tr>
+<tr><td>wbe_delta2</td><td>0.0033</td><td>0.0085</td></tr>
+<tr><td>ar_roll3_mean</td><td>0.0033</td><td>0.0085</td></tr>
+<tr><td>ar_lag1</td><td>0.0000</td><td>0.0001</td></tr>
+</table>
+<h3>5.2 Input perturbation and measurement noise</h3>
+<table>
+<tr><th>shift</th><th>mean_prediction_change</th><th>mean_rmse</th><th>mean_rmse_change</th></tr>
+<tr><td>-1.0000</td><td>-0.5484</td><td>0.7165</td><td>0.3288</td></tr>
+<tr><td>-0.5000</td><td>-0.2742</td><td>0.5038</td><td>0.1161</td></tr>
+<tr><td>-0.2500</td><td>-0.1371</td><td>0.4281</td><td>0.0404</td></tr>
+<tr><td>0.2500</td><td>0.1371</td><td>0.3936</td><td>0.0058</td></tr>
+<tr><td>0.5000</td><td>0.2742</td><td>0.4464</td><td>0.0586</td></tr>
+<tr><td>1.0000</td><td>0.5484</td><td>0.6313</td><td>0.2436</td></tr>
+</table>
+<figure><img src="../figures/fig08_sensitivity.png" alt="Sensitivity"><figcaption>Sensitivity</figcaption></figure>
+<p>Adding Gaussian analytical noise of 0.3 robust-SD units to every wastewater input, 60 draws per fold, inflates RMSE by a median of 0.0101 (2.7%, 95% range -0.5% to 10.6%) against a mean fold baseline of 0.3877. 92% of noise draws made the forecast worse.</p>
+<p>Inflation is computed per fold against that fold&#x27;s own baseline. Pooling raw RMSEs across folds of differing difficulty and comparing their median to the mean of the fold baselines gives the nonsensical result that added noise <em>improves</em> accuracy — an artefact of mixing two distributions, which an earlier version of this analysis reported before it was caught.</p>
+<p>This bounds what better analytical precision alone could buy: the dominant error is epidemiological and ascertainment-driven, not analytical.</p>
+<h3>5.3 Specification curve</h3>
+<table>
+<tr><th>specification</th><th>n</th><th>rmse</th><th>r2</th><th>spearman</th><th>note</th></tr>
+<tr><td>region-weeks with &gt;=2 sites</td><td>508</td><td>0.333</td><td>0.219</td><td>0.465</td><td></td></tr>
+<tr><td>Omicron era only (2021-12 on)</td><td>988</td><td>0.339</td><td>0.168</td><td>0.677</td><td>reduced split: 40wk train / 13wk test - not directly comparable to the headline</td></tr>
+<tr><td>pre-Omicron only (to 2021-11)</td><td>265</td><td>0.352</td><td>0.325</td><td>0.707</td><td>reduced split: 30wk train / 10wk test - not directly comparable to the headline</td></tr>
+<tr><td>headline (causal z, clip +/-3)</td><td>942</td><td>0.391</td><td>0.390</td><td>0.622</td><td></td></tr>
+<tr><td>causal z, unclipped</td><td>942</td><td>0.391</td><td>0.390</td><td>0.622</td><td></td></tr>
+<tr><td>retrospective z-score (leaks future data)</td><td>929</td><td>0.394</td><td>0.424</td><td>0.657</td><td></td></tr>
+<tr><td>counties with &gt;=90 weeks only</td><td>442</td><td>0.414</td><td>0.422</td><td>0.629</td><td></td></tr>
+<tr><td>causal z, clip +/-5</td><td>942</td><td>0.438</td><td>0.236</td><td>0.617</td><td></td></tr>
+<tr><td>causal z, clip +/-10</td><td>942</td><td>0.602</td><td>-0.444</td><td>0.586</td><td></td></tr>
+</table>
+<figure><img src="../figures/fig09_specification.png" alt="Specification"><figcaption>Specification</figcaption></figure>
+<h2>6. Second programme: Queensland</h2>
+<p>The Queensland programme publishes qualitative detect/non-detect results for 122 sites, 42 of which are upstream sub-catchment points withheld under the governance policy. It cannot enter the quantitative model — no concentrations are published — but it supports the urban/rural comparison the proposal asks for, which the California data cannot (NWSS carries no urban/rural label).</p>
+<table>
+<tr><th>size_band</th><th>sites</th><th>site_weeks</th><th>mean_detect_fraction</th></tr>
+<tr><td>&lt;10k</td><td>27</td><td>826</td><td>0.300</td></tr>
+<tr><td>10-50k</td><td>32</td><td>1,648</td><td>0.169</td></tr>
+<tr><td>50-150k</td><td>16</td><td>922</td><td>0.259</td></tr>
+<tr><td>&gt;150k</td><td>6</td><td>493</td><td>0.292</td></tr>
+</table>
+<figure><img src="../figures/fig10_qld_detection.png" alt="Queensland detection"><figcaption>Queensland detection</figcaption></figure>
+<p>Detection frequency rises with catchment size. Two mechanisms are confounded and this design cannot separate them: larger catchments contain more infected people at a given prevalence (a sampling-effort effect), and they were also sampled more often. The operational implication holds either way — a small rural sewershed needs a more sensitive assay or more frequent sampling to reach the same detection probability as a city plant.</p>
+<h2>7. Governance and ethics</h2>
+<pre>
+Publication policy in force for this analysis:
+  * Sewersheds serving fewer than 3,000 people are suppressed from all released outputs, and catchments with no verified served population are treated as failing that floor rather than as meeting it.
+  * A region-week must aggregate at least 1 monitored site(s) to be released.
+  * Catchments identifiable as correctional, educational, healthcare or workplace settings, and upstream sub-catchment sampling points, are withheld pending explicit review by the governing research ethics committee.
+  * No individual-level data are collected, processed or stored at any stage. Where sequencing data are processed, human reads are removed before any onward sharing.
+  * These thresholds are configuration, not constants: the governing ethics committee sets them and the pipeline executes that decision.
+</pre>
+<p>Applied to the released outputs: 30,065</p>
+<p>of 30,104 site-weeks released</p>
+<p>(suppression rate 0.001).</p>
+<h2>8. Limitations</h2>
+<p>1. <strong>Reported cases are a biased comparator.</strong> Test-seeking behaviour and test</p>
+<p>   availability changed enormously across 2020–2023. Part of any wastewater-versus-cases</p>
+<p>   discrepancy is a change in ascertainment, not in transmission, and this analysis</p>
+<p>   cannot separate the two.</p>
+<p>2. <strong>One jurisdiction, one pathogen validated quantitatively.</strong> Case data were</p>
+<p>   available only for COVID-19 and only for California counties. The influenza,</p>
+<p>   RSV, norovirus, mpox, <em>C. auris</em> and <em>Legionella</em> series are characterised</p>
+<p>   descriptively but not validated against clinical outcomes.</p>
+<p>3. <strong>No non-communicable-disease measurements.</strong> The back-calculation engine and</p>
+<p>   catalogue are implemented and tested, but no metformin or metabolite</p>
+<p>   measurements were obtainable, so the NCD arm is methodological, not empirical.</p>
+<p>4. <strong>Sewershed-to-county attribution is approximate.</strong> 14,287</p>
+<p>   rows come from sewersheds spanning more than one county; the first listed</p>
+<p>   FIPS code is used.</p>
+<p>5. <strong>Matrix pooling rests on standardisation.</strong> Solids and liquid measurements</p>
+<p>   are made comparable by removing site-level scale, which is what forecloses</p>
+<p>   the level-prediction task in §3.3.</p>
+<p>6. <strong>No sequence-level omics were processed.</strong> Genomic depth here is</p>
+<p>   assay-level PCR targets, not metagenomes.</p>
+<h2>9. Reproducing this report</h2>
+<pre>
+pip install -r requirements.txt
+python -m omics_wbe.cli check-sources     # confirm raw inputs are present
+python -m omics_wbe.cli run --force       # full pipeline + study + report
+python -m omics_wbe.cli verify            # re-hash every manifest input/output
+</pre>
+<p>Every stage writes a manifest to <code>results/wbe/manifests/</code> recording input and</p>
+<p>output SHA-256 hashes, configuration, random seed and library versions.</p>
+</body></html>

@@ -1,15 +1,29 @@
+# Core scientific stack (omics_wbe analysis platform)
 pandas
 numpy
+scipy
 scikit-learn
 matplotlib
+pyarrow
 seaborn
+
+# Workflow orchestration (OPTIONAL).
+# `workflow/Snakefile` wraps the same CLI commands the verified path uses, so
+# nothing depends on Snakemake being installed. It could not be installed in the
+# environment this work was developed in - a transitive dependency
+# (connection_pool) fails to build - so the Snakefile is provided but was not
+# executed here. `python -m omics_wbe.cli run` is the verified entry point.
+# snakemake
+
+# Demo pipeline + Streamlit application (pre-existing)
 streamlit>=1.31.0
 Pillow
 joblib
 altair==4.2.2
 biopython
 requests
-pytest
+
+# Persistence, auth and API layers (pre-existing)
 SQLAlchemy>=2.0
 alembic
 argon2-cffi
@@ -20,3 +34,6 @@ uvicorn[standard]
 httpx
 pyjwt
 email-validator
+
+# Testing
+pytest

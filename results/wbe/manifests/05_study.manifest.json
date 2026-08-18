@@ -1,0 +1,110 @@
+{
+  "stage": "05_study",
+  "started_at": "2026-08-18T05:07:07.646198+00:00",
+  "finished_at": "2026-08-18T05:07:07.658100+00:00",
+  "git_revision": "26021e4c0da29cbea90a095fafc988306dbe6d44",
+  "libraries": {
+    "python": "3.11.15",
+    "numpy": "2.4.6",
+    "pandas": "3.0.5",
+    "sklearn": "1.9.0",
+    "scipy": "1.17.1",
+    "matplotlib": "3.11.1"
+  },
+  "config": {
+    "recovery_min_pct": 5.0,
+    "recovery_max_pct": 200.0,
+    "censored_substitution": "lod_over_sqrt2",
+    "primary_metric": "log10_ratio_pmmov",
+    "signal_variant": "zc",
+    "signal_clip": 3.0,
+    "week_anchor": "W-SAT",
+    "min_samples_per_site_week": 1,
+    "min_population_served": 3000,
+    "min_sites_per_region_week": 1,
+    "max_lag_weeks": 4,
+    "forecast_horizons": [
+      0,
+      1,
+      2
+    ],
+    "n_cv_splits": 5,
+    "cv_gap_weeks": 4,
+    "conformal_alpha": 0.2,
+    "ewma_lambda": 0.3,
+    "alert_sigma": 2.0,
+    "surge_threshold_per_100k": 20.0,
+    "seed": 20240501,
+    "extras": {}
+  },
+  "inputs": {},
+  "outputs": {
+    "study_results": "/home/user/omics-prediction/results/wbe/study_results.json::1c202037ff0a9ecc75bb27832f1b639c4b60e9a6285b51b5ceec250705d129d1",
+    "figure_qc_waterfall": "/home/user/omics-prediction/results/wbe/figures/fig01_qc_waterfall.png::92b3b7c87d02f929778cfedf2f1012d5f9dee1c16fff9e9218fab333691e2e58",
+    "figure_target_coverage": "/home/user/omics-prediction/results/wbe/figures/fig02_target_coverage.png::c295378d6b4bc4275a9557d3f46152cc74ce7ae230fba5d25caa1fb112e105a8",
+    "table_biomarker_catalog": "/home/user/omics-prediction/results/wbe/tables/biomarker_catalog.csv::e56449568fd0e8b17d8962d4e56eed50c7d172015dd4e0608809445c9ccd3454",
+    "table_target_coverage": "/home/user/omics-prediction/results/wbe/tables/target_coverage.csv::e114742f5da00e731be352b3d137ca04440daa23454090ea9b4d90456e5ca330",
+    "table_pathogen_correlation": "/home/user/omics-prediction/results/wbe/tables/pathogen_correlation.csv::db5ed820ab32074f951a1e5293ec41e8c7db75141ae8c81c5d1d0383baa9aa8d",
+    "figure_lag_correlation": "/home/user/omics-prediction/results/wbe/figures/fig03_lag_correlation.png::9277c7b18b40b0eaec30da5194f6e92de8a5d9c924681f4766aa702592e07fd2",
+    "figure_series": "/home/user/omics-prediction/results/wbe/figures/fig04_series.png::10eb27775f4b1a9b77d0f4da45deaa528664be373294b490531a21c7c88530ef",
+    "figure_model_skill": "/home/user/omics-prediction/results/wbe/figures/fig05_model_skill.png::1b6fbc62945bcedc6528a95a057764f9d50f47108ef938ee12204010978081ee",
+    "figure_optimism": "/home/user/omics-prediction/results/wbe/figures/fig06_optimism.png::b19268d1b074d638ffd415fd7b15c4dc2fae6ff67169be9145784d29afc91a8b",
+    "table_panel_coverage": "/home/user/omics-prediction/results/wbe/tables/panel_coverage.csv::4119248f4b0c4f8d662850dafde3bdff8456b1d85b363fb072cfcae456571e39",
+    "table_lag_correlations": "/home/user/omics-prediction/results/wbe/tables/lag_correlations.csv::4d0d7800a3e20c9c42193db33588494abb6ee9452a2c8ac65a70a30a6eba606e",
+    "figure_alerts": "/home/user/omics-prediction/results/wbe/figures/fig07_alerts.png::56b690e9b8edf9b909decd4b393387276f189f00ea2014f129ef854db3f351e0",
+    "table_alert_events": "/home/user/omics-prediction/results/wbe/tables/alert_events.csv::ff1b480ded3d94ece0eed4e2b18dcd64091e4e1fa2ee0ac93701b6b7282200d3",
+    "table_surge_classification": "/home/user/omics-prediction/results/wbe/tables/surge_classification.csv::abee3d4c0c88cbd7824cdac74ff69e6884f57c492dbeb79df20a579744568c22",
+    "table_operating_points": "/home/user/omics-prediction/results/wbe/tables/alert_operating_points.csv::9fe79dc17e625838a97b2c7fc81043e71b89b16e2c594df383226871aeeef7fa",
+    "table_decision_curves": "/home/user/omics-prediction/results/wbe/tables/decision_curves.csv::f43bf767d4fee6ffe7f2e73452d19687d7b8da1603a7a1bac4317faf34aaee84",
+    "figure_sensitivity": "/home/user/omics-prediction/results/wbe/figures/fig08_sensitivity.png::de1d54b7990cbacf7959f5cb7bfd76e9ad590f9c8ba3b0bd44dec6654099fe53",
+    "figure_specification": "/home/user/omics-prediction/results/wbe/figures/fig09_specification.png::511f63f6fe2563868f66dfe27cd017eae7fd433302585be73cf7ac41ebb3d465",
+    "table_permutation_importance": "/home/user/omics-prediction/results/wbe/tables/sensitivity_permutation.csv::87f157d587f558ab65a1d0388ed3e698a1c63f7d566bf0611989f318f75ea0e7",
+    "table_input_perturbation": "/home/user/omics-prediction/results/wbe/tables/sensitivity_perturbation.csv::69ca48c7232f3014fd524842b63c339b7c975564dc6b55d5204c537bb99b716c",
+    "table_specification_curve": "/home/user/omics-prediction/results/wbe/tables/sensitivity_specification.csv::eefc1e735290019b1aa5bf27199753048a3c7cc83ecc356684068a3fa655b847",
+    "figure_qld_detection": "/home/user/omics-prediction/results/wbe/figures/fig10_qld_detection.png::35122d203ec752d62f211e309d9e73c98b3274ae0bc9ec6d0f7cfa754859e0df",
+    "table_qld_detection_by_size": "/home/user/omics-prediction/results/wbe/tables/qld_detection_by_size.csv::bec3300b5b9b890e9cfe02d8e6b74626b2c329cf565301e323d23639d489934c"
+  },
+  "metrics": {
+    "headline": {
+      "n_measurements_ingested": 137711,
+      "n_measurements_retained": 97960,
+      "qc_pass_rate": 0.8428,
+      "n_biomarkers_in_catalog": 36,
+      "n_targets_measured": 11,
+      "optimal_lead_weeks": 3,
+      "peak_spearman": 0.5675744898830358,
+      "n_counties_modelled": 17,
+      "h1_wbe_best_estimator": "ridge",
+      "h1_wbe_rmse": 0.41396175366363086,
+      "h1_wbe_spearman": 0.5967878419489658,
+      "h1_wbe_skill": 0.17712261335218427,
+      "h1_ar_best_estimator": "ridge",
+      "h1_ar_rmse": 0.40998264327552775,
+      "h1_ar_spearman": 0.5698799467160514,
+      "h1_ar_skill": 0.19147832931510989,
+      "h1_wbe+ar_best_estimator": "ridge",
+      "h1_wbe+ar_rmse": 0.3911798478781596,
+      "h1_wbe+ar_spearman": 0.6216515095403341,
+      "h1_wbe+ar_skill": 0.2224087175144499,
+      "alert": {
+        "block": "wbe+ar",
+        "estimator": "logistic",
+        "auroc": 0.7475451183975316,
+        "auprc": 0.3368391740146385,
+        "prevalence": 0.1033013844515442,
+        "auprc_lift_over_prevalence": 3.260742107213871
+      },
+      "net_benefit": {
+        "n_thresholds_tested": 30,
+        "n_thresholds_with_positive_net_benefit": 23,
+        "threshold_range": [
+          0.06,
+          0.6
+        ],
+        "max_benefit_over_best_default": 0.03591153379399164
+      },
+      "median_lead_weeks_alarm": 1.0
+    }
+  },
+  "notes": []
+}

@@ -1,0 +1,78 @@
+# Snakemake workflow for the omics-WBE study.
+#
+#   snakemake --cores 4 --snakefile workflow/Snakefile
+#
+# Each rule shells out to the same CLI a human would run, so there is exactly
+# one code path from raw submissions to the published report. The stage caching
+# inside omics_wbe.pipeline means re-running is cheap; `--config force=true`
+# rebuilds from the raw inputs.
+
+from pathlib import Path
+
+FORCE = "--force" if str(config.get("force", "")).lower() in {"1", "true", "yes"} else ""
+
+RAW = Path("data/raw")
+INTERIM = Path("data/interim")
+RESULTS = Path("results/wbe")
+
+
+rule all:
+    input:
+        RESULTS / "reports" / "technical_report.html",
+        RESULTS / "reports" / "technical_report.md",
+        RESULTS / "study_results.json",
+
+
+rule check_sources:
+    output:
+        touch(INTERIM / ".sources_checked")
+    shell:
+        "python -m omics_wbe.cli check-sources"
+
+
+rule stage_one:
+    """Ingest, harmonise, QC, normalise and aggregate every source."""
+    input:
+        INTERIM / ".sources_checked",
+        nwss=RAW / "nwss" / "master-covid-public.csv",
+        nyt=expand(str(RAW / "nyt" / "us-counties-{year}.csv"), year=[2020, 2021, 2022, 2023]),
+    output:
+        INTERIM / "wbe_region_week.parquet",
+        INTERIM / "wbe_site_week.parquet",
+        INTERIM / "health_region_week.parquet",
+        INTERIM / "qld_site_week.parquet",
+    shell:
+        "python -m omics_wbe.cli stage-one " + FORCE
+
+
+rule study:
+    """Run every objective's analysis and write figures, tables and the report."""
+    input:
+        INTERIM / "wbe_region_week.parquet",
+        INTERIM / "health_region_week.parquet",
+        INTERIM / "qld_site_week.parquet",
+    output:
+        RESULTS / "study_results.json",
+        RESULTS / "reports" / "technical_report.md",
+        RESULTS / "reports" / "technical_report.html",
+    shell:
+        "python -m omics_wbe.cli run " + FORCE
+
+
+rule verify:
+    """Re-hash every manifest input and output. Fails the build on drift."""
+    input:
+        RESULTS / "study_results.json",
+    shell:
+        "python -m omics_wbe.cli verify"
+
+
+rule test:
+    shell:
+        "python -m pytest tests/ -q"
+
+
+rule clean_results:
+    """Remove derived outputs. Raw inputs and manifests are left alone."""
+    shell:
+        "rm -rf {RESULTS}/figures {RESULTS}/tables {RESULTS}/reports"

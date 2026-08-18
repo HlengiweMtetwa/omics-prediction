@@ -1,0 +1,1332 @@
+{
+  "catalog_version": "1.1.0",
+  "generated_for": "Omics Approaches to Predictive Prevention Tools for Disease Surveillance Through WBE",
+  "evidence_tier_definitions": {
+    "established": "Routinely measured in operational wastewater surveillance programmes; quantitative association with community disease burden reported in peer-reviewed studies.",
+    "emerging": "Peer-reviewed detection in wastewater demonstrated, but quantitative back-calculation to population prevalence is not yet validated.",
+    "prospective": "Biologically plausible and proposed in the literature; no validated wastewater assay or population-scale calibration. Included to define the schema, not to support inference."
+  },
+  "parameter_status_definitions": {
+    "literature": "Value taken from the cited peer-reviewed source and usable as a prior.",
+    "requires_local_calibration": "No transferable literature value; must be estimated from local excretion/stability studies before any prevalence estimate is published."
+  },
+  "biomarkers": [
+    {
+      "biomarker_id": "pmmov",
+      "name": "Pepper mild mottle virus",
+      "omics_layer": "genomics",
+      "analyte_type": "plant virus RNA (faecal indicator)",
+      "disease_class": "normaliser",
+      "conditions": [
+        "faecal strength normalisation"
+      ],
+      "assay": "RT-qPCR / RT-dPCR",
+      "nwss_gene_targets": [
+        "pepper mild mottle virus"
+      ],
+      "evidence_tier": "established",
+      "role": "normaliser",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": null,
+      "stability_notes": "Highly abundant and comparatively stable in sewage; the de facto faecal-strength normaliser in NWSS submissions.",
+      "excretion": null,
+      "caveats": [
+        "Normalisation does not uniformly improve correlation with clinical data; benefit is site-specific (Maal-Bared 2022)."
+      ],
+      "references": [
+        {
+          "pmid": "38598332",
+          "doi": "10.1016/j.xpro.2024.103001",
+          "citation": "Sanchez Jimenez B et al. Protocol to longitudinally quantify SARS-CoV-2 RNA in wastewater using RT-qPCR and pepper mild mottle virus normalization. STAR Protoc. 2024."
+        },
+        {
+          "pmid": "36167131",
+          "doi": "10.1016/j.scitotenv.2022.158964",
+          "citation": "Maal-Bared R et al. Does normalization of SARS-CoV-2 concentrations by Pepper Mild Mottle Virus improve correlations and lead time between wastewater surveillance and clinical data. Sci Total Environ. 2022."
+        },
+        {
+          "pmid": "34610400",
+          "doi": "10.1016/j.scitotenv.2021.150722",
+          "citation": "Torii S et al. Comparison of five polyethylene glycol precipitation procedures for the RT-qPCR based recovery of murine hepatitis virus, bacteriophage phi6, and pepper mild mottle virus. Sci Total Environ. 2021."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "crassphage",
+      "name": "crAssphage (CPQ_056)",
+      "omics_layer": "genomics",
+      "analyte_type": "bacteriophage DNA (faecal indicator)",
+      "disease_class": "normaliser",
+      "conditions": [
+        "faecal strength normalisation"
+      ],
+      "assay": "qPCR / dPCR",
+      "nwss_gene_targets": [],
+      "evidence_tier": "established",
+      "role": "normaliser",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": null,
+      "stability_notes": "Human-gut-specific bacteriophage; alternative faecal normaliser where PMMoV is unavailable.",
+      "excretion": null,
+      "caveats": [],
+      "references": [
+        {
+          "pmid": "34610400",
+          "doi": "10.1016/j.scitotenv.2021.150722",
+          "citation": "Torii S et al. Comparison of five polyethylene glycol precipitation procedures for the RT-qPCR based recovery of murine hepatitis virus, bacteriophage phi6, and pepper mild mottle virus. Sci Total Environ. 2021."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "creatinine",
+      "name": "Creatinine",
+      "omics_layer": "metabolomics",
+      "analyte_type": "endogenous human metabolite",
+      "disease_class": "normaliser",
+      "conditions": [
+        "population size normalisation"
+      ],
+      "assay": "LC-MS/MS",
+      "nwss_gene_targets": [],
+      "evidence_tier": "established",
+      "role": "normaliser",
+      "typical_units": [
+        "ng/L",
+        "mg/L"
+      ],
+      "preferred_normaliser": null,
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [
+        "In-sewer degradation makes creatinine a weaker population marker than hydrochemical flow-based estimates."
+      ],
+      "references": [
+        {
+          "pmid": "36848844",
+          "doi": "10.1016/j.jhazmat.2023.130989",
+          "citation": "Kasprzyk-Hordern B et al. Wastewater-based epidemiology for comprehensive community health diagnostics in a national surveillance study: Mining biochemical markers in wastewater. J Hazard Mater. 2023."
+        },
+        {
+          "pmid": "31591193",
+          "doi": "10.1073/pnas.1910242116",
+          "citation": "Choi PM et al. Social, demographic, and economic correlates of food and chemical consumption measured by wastewater-based epidemiology. PNAS. 2019."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "sars_cov_2",
+      "name": "SARS-CoV-2 (N gene)",
+      "omics_layer": "genomics",
+      "analyte_type": "viral RNA",
+      "disease_class": "communicable",
+      "conditions": [
+        "COVID-19"
+      ],
+      "assay": "RT-qPCR / RT-dPCR",
+      "nwss_gene_targets": [
+        "N",
+        "n1",
+        "n2",
+        "N1",
+        "N2"
+      ],
+      "evidence_tier": "established",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": "pmmov",
+      "stability_notes": "RNA signal declines with in-sewer residence time and temperature; free viral fraction can sharpen early-warning (Zhao 2023).",
+      "excretion": null,
+      "caveats": [
+        "Shedding is heterogeneous between individuals and declines over the infection course, so concentration maps to incidence non-linearly."
+      ],
+      "references": [
+        {
+          "pmid": "38598332",
+          "doi": "10.1016/j.xpro.2024.103001",
+          "citation": "Sanchez Jimenez B et al. Protocol to longitudinally quantify SARS-CoV-2 RNA in wastewater using RT-qPCR and pepper mild mottle virus normalization. STAR Protoc. 2024."
+        },
+        {
+          "pmid": "36167131",
+          "doi": "10.1016/j.scitotenv.2022.158964",
+          "citation": "Maal-Bared R et al. Does normalization of SARS-CoV-2 concentrations by Pepper Mild Mottle Virus improve correlations and lead time between wastewater surveillance and clinical data. Sci Total Environ. 2022."
+        },
+        {
+          "pmid": "37546328",
+          "doi": "10.3389/fpubh.2023.1140441",
+          "citation": "Zhao L et al. Targeting a free viral fraction enhances the early alert potential of wastewater surveillance for SARS-CoV-2. Front Public Health. 2023."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "sars_cov_2_s",
+      "name": "SARS-CoV-2 S gene",
+      "omics_layer": "genomics",
+      "analyte_type": "viral RNA",
+      "disease_class": "communicable",
+      "conditions": [
+        "COVID-19"
+      ],
+      "assay": "RT-qPCR",
+      "nwss_gene_targets": [
+        "s",
+        "S"
+      ],
+      "evidence_tier": "established",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": "pmmov",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [
+        "Used mainly for variant discrimination rather than absolute burden."
+      ],
+      "references": [
+        {
+          "pmid": "38598332",
+          "doi": "10.1016/j.xpro.2024.103001",
+          "citation": "Sanchez Jimenez B et al. Protocol to longitudinally quantify SARS-CoV-2 RNA in wastewater using RT-qPCR and pepper mild mottle virus normalization. STAR Protoc. 2024."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "sars_cov_2_del69_70",
+      "name": "SARS-CoV-2 spike del69/70 variant marker",
+      "omics_layer": "genomics",
+      "analyte_type": "viral RNA variant marker",
+      "disease_class": "communicable",
+      "conditions": [
+        "COVID-19 (Alpha/Omicron BA.1 lineages)"
+      ],
+      "assay": "RT-qPCR allele-specific",
+      "nwss_gene_targets": [
+        "del69/70"
+      ],
+      "evidence_tier": "established",
+      "role": "variant_marker",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": "pmmov",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [
+        "Presence/absence of a deletion marker indicates lineage composition, not overall incidence."
+      ],
+      "references": [
+        {
+          "pmid": "38598332",
+          "doi": "10.1016/j.xpro.2024.103001",
+          "citation": "Sanchez Jimenez B et al. Protocol to longitudinally quantify SARS-CoV-2 RNA in wastewater using RT-qPCR and pepper mild mottle virus normalization. STAR Protoc. 2024."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "influenza_a",
+      "name": "Influenza A virus",
+      "omics_layer": "genomics",
+      "analyte_type": "viral RNA",
+      "disease_class": "communicable",
+      "conditions": [
+        "Seasonal influenza A"
+      ],
+      "assay": "RT-qPCR / RT-dPCR",
+      "nwss_gene_targets": [
+        "InfA1",
+        "InfA2",
+        "InfA"
+      ],
+      "evidence_tier": "established",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": "pmmov",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [
+        "Cannot distinguish human seasonal from avian/zoonotic influenza A without subtyping."
+      ],
+      "references": [
+        {
+          "pmid": "36965504",
+          "doi": "10.1016/S2666-5247(22)00386-X",
+          "citation": "Boehm AB et al. Wastewater concentrations of human influenza, metapneumovirus, parainfluenza, respiratory syncytial virus, rhinovirus, and seasonal coronavirus nucleic acids during a COVID-19 pandemic. Lancet Microbe. 2023."
+        },
+        {
+          "pmid": "37708080",
+          "doi": "10.15585/mmwr.mm7237a2",
+          "citation": "DeJonge PM et al. Wastewater Surveillance Data as a Complement to Emergency Department Visit Data for Tracking Incidence of Influenza A and Respiratory Syncytial Virus. MMWR. 2023."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "influenza_b",
+      "name": "Influenza B virus",
+      "omics_layer": "genomics",
+      "analyte_type": "viral RNA",
+      "disease_class": "communicable",
+      "conditions": [
+        "Seasonal influenza B"
+      ],
+      "assay": "RT-qPCR / RT-dPCR",
+      "nwss_gene_targets": [
+        "InfB"
+      ],
+      "evidence_tier": "established",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": "pmmov",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [],
+      "references": [
+        {
+          "pmid": "36965504",
+          "doi": "10.1016/S2666-5247(22)00386-X",
+          "citation": "Boehm AB et al. Wastewater concentrations of human influenza, metapneumovirus, parainfluenza, respiratory syncytial virus, rhinovirus, and seasonal coronavirus nucleic acids during a COVID-19 pandemic. Lancet Microbe. 2023."
+        },
+        {
+          "pmid": "37708080",
+          "doi": "10.15585/mmwr.mm7237a2",
+          "citation": "DeJonge PM et al. Wastewater Surveillance Data as a Complement to Emergency Department Visit Data for Tracking Incidence of Influenza A and Respiratory Syncytial Virus. MMWR. 2023."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "rsv",
+      "name": "Respiratory syncytial virus (A and B)",
+      "omics_layer": "genomics",
+      "analyte_type": "viral RNA",
+      "disease_class": "communicable",
+      "conditions": [
+        "RSV bronchiolitis / lower respiratory infection"
+      ],
+      "assay": "RT-qPCR / RT-dPCR",
+      "nwss_gene_targets": [
+        "RSV-A and RSV-B combined",
+        "RSV"
+      ],
+      "evidence_tier": "established",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": "pmmov",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [],
+      "references": [
+        {
+          "pmid": "36965504",
+          "doi": "10.1016/S2666-5247(22)00386-X",
+          "citation": "Boehm AB et al. Wastewater concentrations of human influenza, metapneumovirus, parainfluenza, respiratory syncytial virus, rhinovirus, and seasonal coronavirus nucleic acids during a COVID-19 pandemic. Lancet Microbe. 2023."
+        },
+        {
+          "pmid": "37708080",
+          "doi": "10.15585/mmwr.mm7237a2",
+          "citation": "DeJonge PM et al. Wastewater Surveillance Data as a Complement to Emergency Department Visit Data for Tracking Incidence of Influenza A and Respiratory Syncytial Virus. MMWR. 2023."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "norovirus_gii",
+      "name": "Norovirus genogroup II",
+      "omics_layer": "genomics",
+      "analyte_type": "viral RNA",
+      "disease_class": "communicable",
+      "conditions": [
+        "Acute gastroenteritis"
+      ],
+      "assay": "RT-qPCR / RT-dPCR",
+      "nwss_gene_targets": [
+        "NoV GII",
+        "NoV GII "
+      ],
+      "evidence_tier": "established",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": "pmmov",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [
+        "Very high shedding per case; wastewater signal saturates during outbreaks."
+      ],
+      "references": [
+        {
+          "pmid": "36965504",
+          "doi": "10.1016/S2666-5247(22)00386-X",
+          "citation": "Boehm AB et al. Wastewater concentrations of human influenza, metapneumovirus, parainfluenza, respiratory syncytial virus, rhinovirus, and seasonal coronavirus nucleic acids during a COVID-19 pandemic. Lancet Microbe. 2023."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "hmpxv",
+      "name": "Monkeypox virus (mpox), G2R generic target",
+      "omics_layer": "genomics",
+      "analyte_type": "viral DNA",
+      "disease_class": "communicable",
+      "conditions": [
+        "Mpox"
+      ],
+      "assay": "qPCR / dPCR",
+      "nwss_gene_targets": [
+        "G2R_G",
+        "G2R_WA"
+      ],
+      "evidence_tier": "emerging",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": "pmmov",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [
+        "Detection is sensitive at low case counts; quantitative prevalence calibration is not established."
+      ],
+      "references": [
+        {
+          "pmid": "37230346",
+          "doi": "10.1016/j.scitotenv.2023.164414",
+          "citation": "Sherchan SP et al. Wastewater surveillance of Mpox virus in Baltimore. Sci Total Environ. 2023."
+        },
+        {
+          "pmid": "36476335",
+          "doi": "10.3201/eid2901.221311",
+          "citation": "La Rosa G et al. Detection of Monkeypox Virus DNA in Airport Wastewater, Rome, Italy. Emerg Infect Dis. 2022."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "mtb_complex",
+      "name": "Mycobacterium tuberculosis complex (IS6110 / rpoB)",
+      "omics_layer": "genomics",
+      "analyte_type": "bacterial DNA",
+      "disease_class": "communicable",
+      "conditions": [
+        "Tuberculosis"
+      ],
+      "assay": "qPCR / dPCR / targeted sequencing",
+      "nwss_gene_targets": [],
+      "evidence_tier": "emerging",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": "pmmov",
+      "stability_notes": "Thick-walled mycobacteria persist in the solids fraction; sludge/solids matrices are preferred over liquid.",
+      "excretion": null,
+      "caveats": [
+        "Environmental non-tuberculous mycobacteria cross-react with generic targets; IS6110 copy number varies between strains.",
+        "No validated shedding model links wastewater load to TB incidence."
+      ],
+      "references": [
+        {
+          "pmid": "35198775",
+          "doi": "10.1016/j.heliyon.2022.e08910",
+          "citation": "Mtetwa HN et al. Molecular surveillance of tuberculosis-causing mycobacteria in wastewater. Heliyon. 2022."
+        },
+        {
+          "pmid": "39725906",
+          "doi": "10.1186/s12889-024-21157-6",
+          "citation": "Chukwu EE et al. Surveillance of public health pathogens in Lagos wastewater canals: a cross-sectional study. BMC Public Health. 2024."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "poliovirus",
+      "name": "Poliovirus (Sabin/wild, VP1)",
+      "omics_layer": "genomics",
+      "analyte_type": "viral RNA",
+      "disease_class": "communicable",
+      "conditions": [
+        "Poliomyelitis"
+      ],
+      "assay": "RT-qPCR / culture + sequencing",
+      "nwss_gene_targets": [],
+      "evidence_tier": "established",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": "pmmov",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [
+        "Environmental surveillance for polio is presence/absence oriented, feeding case investigation rather than prevalence estimation."
+      ],
+      "references": [
+        {
+          "pmid": "39725906",
+          "doi": "10.1186/s12889-024-21157-6",
+          "citation": "Chukwu EE et al. Surveillance of public health pathogens in Lagos wastewater canals: a cross-sectional study. BMC Public Health. 2024."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "hepatitis_a",
+      "name": "Hepatitis A virus",
+      "omics_layer": "genomics",
+      "analyte_type": "viral RNA",
+      "disease_class": "communicable",
+      "conditions": [
+        "Hepatitis A"
+      ],
+      "assay": "RT-qPCR",
+      "nwss_gene_targets": [],
+      "evidence_tier": "emerging",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": "pmmov",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [],
+      "references": [
+        {
+          "pmid": "39725906",
+          "doi": "10.1186/s12889-024-21157-6",
+          "citation": "Chukwu EE et al. Surveillance of public health pathogens in Lagos wastewater canals: a cross-sectional study. BMC Public Health. 2024."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "salmonella_typhi",
+      "name": "Salmonella enterica ser. Typhi (ttr/staG)",
+      "omics_layer": "genomics",
+      "analyte_type": "bacterial DNA",
+      "disease_class": "communicable",
+      "conditions": [
+        "Typhoid fever"
+      ],
+      "assay": "qPCR",
+      "nwss_gene_targets": [],
+      "evidence_tier": "emerging",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": "pmmov",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [],
+      "references": [
+        {
+          "pmid": "39725906",
+          "doi": "10.1186/s12889-024-21157-6",
+          "citation": "Chukwu EE et al. Surveillance of public health pathogens in Lagos wastewater canals: a cross-sectional study. BMC Public Health. 2024."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "arg_sul1",
+      "name": "sul1 (sulfonamide resistance)",
+      "omics_layer": "genomics",
+      "analyte_type": "antimicrobial resistance gene",
+      "disease_class": "amr",
+      "conditions": [
+        "Sulfonamide resistance"
+      ],
+      "assay": "qPCR / dPCR / quantitative metagenomics",
+      "nwss_gene_targets": [],
+      "evidence_tier": "established",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies per 16S rRNA gene copy"
+      ],
+      "preferred_normaliser": "16s_rrna",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [
+        "Gene presence does not establish that the host organism is clinically relevant.",
+        "Metagenomic detection limits are far above qPCR; absence in metagenomes is weak evidence (Davis 2025)."
+      ],
+      "references": [
+        {
+          "pmid": "40100955",
+          "doi": "10.1021/acs.est.4c08284",
+          "citation": "Davis BC et al. Evaluating Quantitative Metagenomics for Environmental Monitoring of Antibiotic Resistance and Establishing Detection Limits. Environ Sci Technol. 2025."
+        },
+        {
+          "pmid": "33205660",
+          "doi": "10.1021/acs.est.0c05567",
+          "citation": "Davis BC et al. Demonstrating an Integrated Antibiotic Resistance Gene Surveillance Approach in Puerto Rican Watersheds Post-Hurricane Maria. Environ Sci Technol. 2020."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "arg_inti1",
+      "name": "intI1 (class 1 integron-integrase)",
+      "omics_layer": "genomics",
+      "analyte_type": "antimicrobial resistance gene",
+      "disease_class": "amr",
+      "conditions": [
+        "Mobile resistance element burden"
+      ],
+      "assay": "qPCR / dPCR / quantitative metagenomics",
+      "nwss_gene_targets": [],
+      "evidence_tier": "established",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies per 16S rRNA gene copy"
+      ],
+      "preferred_normaliser": "16s_rrna",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [
+        "Gene presence does not establish that the host organism is clinically relevant.",
+        "Metagenomic detection limits are far above qPCR; absence in metagenomes is weak evidence (Davis 2025)."
+      ],
+      "references": [
+        {
+          "pmid": "40100955",
+          "doi": "10.1021/acs.est.4c08284",
+          "citation": "Davis BC et al. Evaluating Quantitative Metagenomics for Environmental Monitoring of Antibiotic Resistance and Establishing Detection Limits. Environ Sci Technol. 2025."
+        },
+        {
+          "pmid": "33205660",
+          "doi": "10.1021/acs.est.0c05567",
+          "citation": "Davis BC et al. Demonstrating an Integrated Antibiotic Resistance Gene Surveillance Approach in Puerto Rican Watersheds Post-Hurricane Maria. Environ Sci Technol. 2020."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "arg_bla_ndm",
+      "name": "blaNDM (carbapenemase)",
+      "omics_layer": "genomics",
+      "analyte_type": "antimicrobial resistance gene",
+      "disease_class": "amr",
+      "conditions": [
+        "Carbapenem resistance"
+      ],
+      "assay": "qPCR / dPCR / quantitative metagenomics",
+      "nwss_gene_targets": [],
+      "evidence_tier": "emerging",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies per 16S rRNA gene copy"
+      ],
+      "preferred_normaliser": "16s_rrna",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [
+        "Gene presence does not establish that the host organism is clinically relevant.",
+        "Metagenomic detection limits are far above qPCR; absence in metagenomes is weak evidence (Davis 2025)."
+      ],
+      "references": [
+        {
+          "pmid": "40100955",
+          "doi": "10.1021/acs.est.4c08284",
+          "citation": "Davis BC et al. Evaluating Quantitative Metagenomics for Environmental Monitoring of Antibiotic Resistance and Establishing Detection Limits. Environ Sci Technol. 2025."
+        },
+        {
+          "pmid": "33205660",
+          "doi": "10.1021/acs.est.0c05567",
+          "citation": "Davis BC et al. Demonstrating an Integrated Antibiotic Resistance Gene Surveillance Approach in Puerto Rican Watersheds Post-Hurricane Maria. Environ Sci Technol. 2020."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "arg_bla_ctx_m",
+      "name": "blaCTX-M (extended-spectrum beta-lactamase)",
+      "omics_layer": "genomics",
+      "analyte_type": "antimicrobial resistance gene",
+      "disease_class": "amr",
+      "conditions": [
+        "Third-generation cephalosporin resistance"
+      ],
+      "assay": "qPCR / dPCR / quantitative metagenomics",
+      "nwss_gene_targets": [],
+      "evidence_tier": "emerging",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies per 16S rRNA gene copy"
+      ],
+      "preferred_normaliser": "16s_rrna",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [
+        "Gene presence does not establish that the host organism is clinically relevant.",
+        "Metagenomic detection limits are far above qPCR; absence in metagenomes is weak evidence (Davis 2025)."
+      ],
+      "references": [
+        {
+          "pmid": "40100955",
+          "doi": "10.1021/acs.est.4c08284",
+          "citation": "Davis BC et al. Evaluating Quantitative Metagenomics for Environmental Monitoring of Antibiotic Resistance and Establishing Detection Limits. Environ Sci Technol. 2025."
+        },
+        {
+          "pmid": "33205660",
+          "doi": "10.1021/acs.est.0c05567",
+          "citation": "Davis BC et al. Demonstrating an Integrated Antibiotic Resistance Gene Surveillance Approach in Puerto Rican Watersheds Post-Hurricane Maria. Environ Sci Technol. 2020."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "16s_rrna",
+      "name": "Bacterial 16S rRNA gene",
+      "omics_layer": "genomics",
+      "analyte_type": "bacterial DNA (community size)",
+      "disease_class": "normaliser",
+      "conditions": [
+        "total bacterial load normalisation"
+      ],
+      "assay": "qPCR / dPCR",
+      "nwss_gene_targets": [],
+      "evidence_tier": "established",
+      "role": "normaliser",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": null,
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [],
+      "references": [
+        {
+          "pmid": "40100955",
+          "doi": "10.1021/acs.est.4c08284",
+          "citation": "Davis BC et al. Evaluating Quantitative Metagenomics for Environmental Monitoring of Antibiotic Resistance and Establishing Detection Limits. Environ Sci Technol. 2025."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "metformin",
+      "name": "Metformin",
+      "omics_layer": "metabolomics",
+      "analyte_type": "pharmaceutical residue (parent)",
+      "disease_class": "non_communicable",
+      "conditions": [
+        "Type 2 diabetes mellitus"
+      ],
+      "assay": "LC-MS/MS",
+      "nwss_gene_targets": [],
+      "evidence_tier": "established",
+      "role": "target",
+      "typical_units": [
+        "ng/L",
+        "mg/day/1000 people"
+      ],
+      "preferred_normaliser": "flow_population",
+      "stability_notes": "Comparatively stable in sewer transport relative to many prescription drugs (Lin 2020).",
+      "excretion": {
+        "parameter_status": "literature",
+        "excretion_fraction_of_dose": 0.9,
+        "excretion_fraction_basis": "fraction of the ABSORBED dose excreted unchanged in urine; metformin is not metabolised in humans",
+        "oral_bioavailability": 0.55,
+        "molar_correction_factor": 1.0,
+        "source_ref": "zhou2024",
+        "uncertainty": "Oral bioavailability is dose-dependent (~0.4-0.6); propagate as a distribution, not a point value."
+      },
+      "caveats": [
+        "Estimates population *treated* prevalence, not total diabetes prevalence: undiagnosed and non-pharmacologically managed cases are invisible.",
+        "Metformin is also prescribed for polycystic ovary syndrome and prediabetes."
+      ],
+      "references": [
+        {
+          "pmid": "38490426",
+          "doi": "10.1016/j.scitotenv.2024.171659",
+          "citation": "Zhou X et al. Wastewater-based estimation of diabetes mellitus prevalence in 237 cities: A cross-China study. Sci Total Environ. 2024."
+        },
+        {
+          "pmid": "33254861",
+          "doi": "10.1016/j.scitotenv.2020.142414",
+          "citation": "Lin W et al. Evaluating the stability of prescription drugs in municipal wastewater and sewers based on wastewater-based epidemiology. Sci Total Environ. 2020."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "atorvastatin_ohmetabolites",
+      "name": "Atorvastatin and hydroxy-metabolites",
+      "omics_layer": "metabolomics",
+      "analyte_type": "pharmaceutical residue",
+      "disease_class": "non_communicable",
+      "conditions": [
+        "Hyperlipidaemia",
+        "Cardiovascular disease risk management"
+      ],
+      "assay": "LC-MS/MS",
+      "nwss_gene_targets": [],
+      "evidence_tier": "emerging",
+      "role": "target",
+      "typical_units": [
+        "ng/L"
+      ],
+      "preferred_normaliser": "flow_population",
+      "stability_notes": null,
+      "excretion": {
+        "parameter_status": "requires_local_calibration",
+        "excretion_fraction_of_dose": null,
+        "note": "Extensive hepatic metabolism and biliary elimination; urinary recovery is low and highly variable."
+      },
+      "caveats": [
+        "Low and variable urinary excretion makes back-calculation to prevalence unreliable without local calibration."
+      ],
+      "references": [
+        {
+          "pmid": "36848844",
+          "doi": "10.1016/j.jhazmat.2023.130989",
+          "citation": "Kasprzyk-Hordern B et al. Wastewater-based epidemiology for comprehensive community health diagnostics in a national surveillance study: Mining biochemical markers in wastewater. J Hazard Mater. 2023."
+        },
+        {
+          "pmid": "33254861",
+          "doi": "10.1016/j.scitotenv.2020.142414",
+          "citation": "Lin W et al. Evaluating the stability of prescription drugs in municipal wastewater and sewers based on wastewater-based epidemiology. Sci Total Environ. 2020."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "antihypertensive_panel",
+      "name": "Antihypertensive panel (valsartan, hydrochlorothiazide, amlodipine)",
+      "omics_layer": "metabolomics",
+      "analyte_type": "pharmaceutical residue",
+      "disease_class": "non_communicable",
+      "conditions": [
+        "Hypertension"
+      ],
+      "assay": "LC-MS/MS",
+      "nwss_gene_targets": [],
+      "evidence_tier": "emerging",
+      "role": "target",
+      "typical_units": [
+        "ng/L"
+      ],
+      "preferred_normaliser": "flow_population",
+      "stability_notes": null,
+      "excretion": {
+        "parameter_status": "requires_local_calibration",
+        "excretion_fraction_of_dose": null
+      },
+      "caveats": [
+        "Multi-drug class: prescribing mix differs by health system, so a panel total is not comparable between countries without a local prescribing denominator."
+      ],
+      "references": [
+        {
+          "pmid": "36848844",
+          "doi": "10.1016/j.jhazmat.2023.130989",
+          "citation": "Kasprzyk-Hordern B et al. Wastewater-based epidemiology for comprehensive community health diagnostics in a national surveillance study: Mining biochemical markers in wastewater. J Hazard Mater. 2023."
+        },
+        {
+          "pmid": "35914338",
+          "doi": "10.1016/j.envint.2022.107436",
+          "citation": "Rousis NI et al. Socioeconomic status and public health in Australia: A wastewater-based study. Environ Int. 2022."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "capecitabine_5fu",
+      "name": "Capecitabine / 5-fluorouracil residues",
+      "omics_layer": "metabolomics",
+      "analyte_type": "cytotoxic drug residue",
+      "disease_class": "non_communicable",
+      "conditions": [
+        "Cancer chemotherapy burden"
+      ],
+      "assay": "LC-MS/MS",
+      "nwss_gene_targets": [],
+      "evidence_tier": "prospective",
+      "role": "target",
+      "typical_units": [
+        "ng/L"
+      ],
+      "preferred_normaliser": "flow_population",
+      "stability_notes": null,
+      "excretion": {
+        "parameter_status": "requires_local_calibration",
+        "excretion_fraction_of_dose": null
+      },
+      "caveats": [
+        "Concentrations are typically at or below detection limits in municipal influent; a hospital-effluent design is required.",
+        "Reflects treatment activity, not cancer incidence."
+      ],
+      "references": [
+        {
+          "pmid": "36848844",
+          "doi": "10.1016/j.jhazmat.2023.130989",
+          "citation": "Kasprzyk-Hordern B et al. Wastewater-based epidemiology for comprehensive community health diagnostics in a national surveillance study: Mining biochemical markers in wastewater. J Hazard Mater. 2023."
+        },
+        {
+          "pmid": "34841130",
+          "doi": "10.1021/acsomega.1c04362",
+          "citation": "Pico Y et al. Mass Spectrometry in Wastewater-Based Epidemiology for the Determination of Small and Large Molecules as Biomarkers of Exposure. ACS Omega. 2021."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "cortisol_cortisone",
+      "name": "Cortisol and cortisone",
+      "omics_layer": "metabolomics",
+      "analyte_type": "endogenous steroid",
+      "disease_class": "non_communicable",
+      "conditions": [
+        "Population stress load",
+        "Hypothalamic-pituitary-adrenal axis activity"
+      ],
+      "assay": "LC-MS/MS",
+      "nwss_gene_targets": [],
+      "evidence_tier": "emerging",
+      "role": "target",
+      "typical_units": [
+        "ng/L"
+      ],
+      "preferred_normaliser": "flow_population",
+      "stability_notes": null,
+      "excretion": {
+        "parameter_status": "requires_local_calibration",
+        "excretion_fraction_of_dose": null
+      },
+      "caveats": [
+        "Strong diurnal variation; 24-hour flow-proportional composite sampling is mandatory.",
+        "Cortisol/cortisone ratio is more robust than either analyte alone."
+      ],
+      "references": [
+        {
+          "pmid": "36848844",
+          "doi": "10.1016/j.jhazmat.2023.130989",
+          "citation": "Kasprzyk-Hordern B et al. Wastewater-based epidemiology for comprehensive community health diagnostics in a national surveillance study: Mining biochemical markers in wastewater. J Hazard Mater. 2023."
+        },
+        {
+          "pmid": "35914338",
+          "doi": "10.1016/j.envint.2022.107436",
+          "citation": "Rousis NI et al. Socioeconomic status and public health in Australia: A wastewater-based study. Environ Int. 2022."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "isoprostane_8_iso_pgf2a",
+      "name": "8-iso-prostaglandin F2alpha (8-isoprostane)",
+      "omics_layer": "metabolomics",
+      "analyte_type": "endogenous oxidative-stress marker",
+      "disease_class": "non_communicable",
+      "conditions": [
+        "Systemic oxidative stress"
+      ],
+      "assay": "LC-MS/MS",
+      "nwss_gene_targets": [],
+      "evidence_tier": "emerging",
+      "role": "target",
+      "typical_units": [
+        "ng/L"
+      ],
+      "preferred_normaliser": "flow_population",
+      "stability_notes": null,
+      "excretion": {
+        "parameter_status": "requires_local_calibration",
+        "excretion_fraction_of_dose": null
+      },
+      "caveats": [
+        "A non-specific stress marker: elevated by inflammation, smoking, air pollution and metabolic disease alike."
+      ],
+      "references": [
+        {
+          "pmid": "36848844",
+          "doi": "10.1016/j.jhazmat.2023.130989",
+          "citation": "Kasprzyk-Hordern B et al. Wastewater-based epidemiology for comprehensive community health diagnostics in a national surveillance study: Mining biochemical markers in wastewater. J Hazard Mater. 2023."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "8_ohdg",
+      "name": "8-hydroxy-2'-deoxyguanosine (8-OHdG)",
+      "omics_layer": "metabolomics",
+      "analyte_type": "oxidative DNA-damage marker",
+      "disease_class": "non_communicable",
+      "conditions": [
+        "Oxidative DNA damage",
+        "Cancer risk (non-specific)"
+      ],
+      "assay": "LC-MS/MS",
+      "nwss_gene_targets": [],
+      "evidence_tier": "prospective",
+      "role": "target",
+      "typical_units": [
+        "ng/L"
+      ],
+      "preferred_normaliser": "flow_population",
+      "stability_notes": null,
+      "excretion": {
+        "parameter_status": "requires_local_calibration",
+        "excretion_fraction_of_dose": null
+      },
+      "caveats": [
+        "No validated link between community wastewater 8-OHdG and any cancer endpoint."
+      ],
+      "references": [
+        {
+          "pmid": "36848844",
+          "doi": "10.1016/j.jhazmat.2023.130989",
+          "citation": "Kasprzyk-Hordern B et al. Wastewater-based epidemiology for comprehensive community health diagnostics in a national surveillance study: Mining biochemical markers in wastewater. J Hazard Mater. 2023."
+        },
+        {
+          "pmid": "34841130",
+          "doi": "10.1021/acsomega.1c04362",
+          "citation": "Pico Y et al. Mass Spectrometry in Wastewater-Based Epidemiology for the Determination of Small and Large Molecules as Biomarkers of Exposure. ACS Omega. 2021."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "cotinine",
+      "name": "Cotinine and trans-3'-hydroxycotinine",
+      "omics_layer": "metabolomics",
+      "analyte_type": "nicotine metabolite",
+      "disease_class": "exposure",
+      "conditions": [
+        "Tobacco / nicotine use"
+      ],
+      "assay": "LC-MS/MS",
+      "nwss_gene_targets": [],
+      "evidence_tier": "established",
+      "role": "target",
+      "typical_units": [
+        "ng/L",
+        "mg/day/1000 people"
+      ],
+      "preferred_normaliser": "flow_population",
+      "stability_notes": "Nicotine metabolite ratios are sensitive to pH and in-sewer conditions (Schmiege 2025).",
+      "excretion": {
+        "parameter_status": "requires_local_calibration",
+        "excretion_fraction_of_dose": null,
+        "note": "Metabolite excretion fractions vary with CYP2A6 genotype distribution in the catchment."
+      },
+      "caveats": [],
+      "references": [
+        {
+          "pmid": "39946894",
+          "doi": "10.1016/j.scitotenv.2025.178767",
+          "citation": "Schmiege D et al. Impact of physicochemical parameters on nicotine metabolites and Bisphenol A in municipal wastewater. Sci Total Environ. 2025."
+        },
+        {
+          "pmid": "31591193",
+          "doi": "10.1073/pnas.1910242116",
+          "citation": "Choi PM et al. Social, demographic, and economic correlates of food and chemical consumption measured by wastewater-based epidemiology. PNAS. 2019."
+        },
+        {
+          "pmid": "35914338",
+          "doi": "10.1016/j.envint.2022.107436",
+          "citation": "Rousis NI et al. Socioeconomic status and public health in Australia: A wastewater-based study. Environ Int. 2022."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "ethyl_sulfate",
+      "name": "Ethyl sulfate",
+      "omics_layer": "metabolomics",
+      "analyte_type": "ethanol metabolite",
+      "disease_class": "exposure",
+      "conditions": [
+        "Alcohol consumption"
+      ],
+      "assay": "LC-MS/MS",
+      "nwss_gene_targets": [],
+      "evidence_tier": "established",
+      "role": "target",
+      "typical_units": [
+        "ng/L"
+      ],
+      "preferred_normaliser": "flow_population",
+      "stability_notes": null,
+      "excretion": {
+        "parameter_status": "requires_local_calibration",
+        "excretion_fraction_of_dose": null,
+        "note": "Only a very small fraction of ingested ethanol appears as ethyl sulfate; the correction factor is large and must be sourced locally."
+      },
+      "caveats": [],
+      "references": [
+        {
+          "pmid": "35914338",
+          "doi": "10.1016/j.envint.2022.107436",
+          "citation": "Rousis NI et al. Socioeconomic status and public health in Australia: A wastewater-based study. Environ Int. 2022."
+        },
+        {
+          "pmid": "31591193",
+          "doi": "10.1073/pnas.1910242116",
+          "citation": "Choi PM et al. Social, demographic, and economic correlates of food and chemical consumption measured by wastewater-based epidemiology. PNAS. 2019."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "bisphenol_a",
+      "name": "Bisphenol A",
+      "omics_layer": "metabolomics",
+      "analyte_type": "industrial chemical / endocrine disruptor",
+      "disease_class": "exposure",
+      "conditions": [
+        "Endocrine-disrupting chemical exposure"
+      ],
+      "assay": "LC-MS/MS",
+      "nwss_gene_targets": [],
+      "evidence_tier": "established",
+      "role": "target",
+      "typical_units": [
+        "ng/L"
+      ],
+      "preferred_normaliser": "flow_population",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [
+        "Industrial and leachate inputs confound human excretion; an industrial-input flag is required before any exposure inference."
+      ],
+      "references": [
+        {
+          "pmid": "39946894",
+          "doi": "10.1016/j.scitotenv.2025.178767",
+          "citation": "Schmiege D et al. Impact of physicochemical parameters on nicotine metabolites and Bisphenol A in municipal wastewater. Sci Total Environ. 2025."
+        },
+        {
+          "pmid": "38887772",
+          "doi": "10.1007/s40201-024-00895-0",
+          "citation": "Aghaei M et al. Exposure to environmental pollutants: A mini-review on the application of wastewater-based epidemiology approach. J Environ Health Sci Eng. 2024."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "hydroxypyrene_1",
+      "name": "1-Hydroxypyrene",
+      "omics_layer": "metabolomics",
+      "analyte_type": "PAH exposure metabolite",
+      "disease_class": "exposure",
+      "conditions": [
+        "Polycyclic aromatic hydrocarbon exposure"
+      ],
+      "assay": "LC-MS/MS",
+      "nwss_gene_targets": [],
+      "evidence_tier": "emerging",
+      "role": "target",
+      "typical_units": [
+        "ng/L"
+      ],
+      "preferred_normaliser": "flow_population",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [],
+      "references": [
+        {
+          "pmid": "38887772",
+          "doi": "10.1007/s40201-024-00895-0",
+          "citation": "Aghaei M et al. Exposure to environmental pollutants: A mini-review on the application of wastewater-based epidemiology approach. J Environ Health Sci Eng. 2024."
+        },
+        {
+          "pmid": "34841130",
+          "doi": "10.1021/acsomega.1c04362",
+          "citation": "Pico Y et al. Mass Spectrometry in Wastewater-Based Epidemiology for the Determination of Small and Large Molecules as Biomarkers of Exposure. ACS Omega. 2021."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "human_protein_panel",
+      "name": "Human urinary/faecal protein panel (e.g. albumin, calprotectin)",
+      "omics_layer": "proteomics",
+      "analyte_type": "human protein",
+      "disease_class": "non_communicable",
+      "conditions": [
+        "Renal injury (albumin)",
+        "Intestinal inflammation (calprotectin)"
+      ],
+      "assay": "LC-MS/MS bottom-up proteomics / immunoassay",
+      "nwss_gene_targets": [],
+      "evidence_tier": "prospective",
+      "role": "target",
+      "typical_units": [
+        "ng/L"
+      ],
+      "preferred_normaliser": "flow_population",
+      "stability_notes": null,
+      "excretion": {
+        "parameter_status": "requires_local_calibration",
+        "excretion_fraction_of_dose": null
+      },
+      "caveats": [
+        "Proteins degrade rapidly under sewer proteolysis; recovery from municipal influent is not established.",
+        "Included to define the proteomics schema. Not usable for inference without a validated recovery and stability study."
+      ],
+      "references": [
+        {
+          "pmid": "34841130",
+          "doi": "10.1021/acsomega.1c04362",
+          "citation": "Pico Y et al. Mass Spectrometry in Wastewater-Based Epidemiology for the Determination of Small and Large Molecules as Biomarkers of Exposure. ACS Omega. 2021."
+        },
+        {
+          "pmid": "36848844",
+          "doi": "10.1016/j.jhazmat.2023.130989",
+          "citation": "Kasprzyk-Hordern B et al. Wastewater-based epidemiology for comprehensive community health diagnostics in a national surveillance study: Mining biochemical markers in wastewater. J Hazard Mater. 2023."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "viral_capsid_peptides",
+      "name": "Pathogen capsid/nucleoprotein peptides",
+      "omics_layer": "proteomics",
+      "analyte_type": "pathogen protein",
+      "disease_class": "communicable",
+      "conditions": [
+        "Protein-level confirmation of viral presence"
+      ],
+      "assay": "Targeted LC-MS/MS (PRM/MRM)",
+      "nwss_gene_targets": [],
+      "evidence_tier": "prospective",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": "pmmov",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [
+        "Far less sensitive than nucleic-acid amplification at municipal influent concentrations."
+      ],
+      "references": [
+        {
+          "pmid": "34841130",
+          "doi": "10.1021/acsomega.1c04362",
+          "citation": "Pico Y et al. Mass Spectrometry in Wastewater-Based Epidemiology for the Determination of Small and Large Molecules as Biomarkers of Exposure. ACS Omega. 2021."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "candida_auris",
+      "name": "Candida auris (ITS2 / C. auris-specific qPCR)",
+      "omics_layer": "genomics",
+      "analyte_type": "fungal DNA",
+      "disease_class": "communicable",
+      "conditions": [
+        "Invasive candidiasis",
+        "Healthcare-associated C. auris colonisation"
+      ],
+      "assay": "qPCR / dPCR (ITS2 region)",
+      "nwss_gene_targets": [
+        "caur"
+      ],
+      "evidence_tier": "emerging",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": "pmmov",
+      "stability_notes": "Recovered from the pelleted solids fraction; solids matrices outperform liquid for this organism.",
+      "excretion": null,
+      "caveats": [
+        "Detection frequency tracks sewersheds serving healthcare facilities rather than general community prevalence (Barber 2023).",
+        "Reported correlation with clinical case counts is weak (r about 0.27, Nwaubani 2024); treat as a facility-level alert signal, not a prevalence estimator."
+      ],
+      "references": [
+        {
+          "pmid": "39571395",
+          "doi": "10.1016/j.ijheh.2024.114486",
+          "citation": "Nwaubani DA et al. Wastewater surveillance of Candida auris in Baltimore. Int J Hyg Environ Health. 2024."
+        },
+        {
+          "pmid": "36656763",
+          "doi": "10.1021/acs.est.2c07763",
+          "citation": "Barber C et al. Community-Scale Wastewater Surveillance of Candida auris during an Ongoing Outbreak in Southern Nevada. Environ Sci Technol. 2023."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "legionella_pneumophila",
+      "name": "Legionella pneumophila (Lpp 24S rRNA target)",
+      "omics_layer": "genomics",
+      "analyte_type": "bacterial DNA",
+      "disease_class": "communicable",
+      "conditions": [
+        "Legionnaires' disease",
+        "Pontiac fever"
+      ],
+      "assay": "qPCR / dPCR",
+      "nwss_gene_targets": [
+        "lppa24s"
+      ],
+      "evidence_tier": "emerging",
+      "role": "target",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": "pmmov",
+      "stability_notes": "Legionella is environmentally replicating in water systems, unlike shed enteric organisms.",
+      "excretion": null,
+      "caveats": [
+        "Legionella proliferates in the environment rather than being shed by cases, so wastewater load is NOT a shedding-based prevalence proxy.",
+        "Building water systems and cooling-tower drainage, not human excretion, dominate the signal."
+      ],
+      "references": [
+        {
+          "pmid": "28501485",
+          "doi": null,
+          "citation": "Legionella occurrence and molecular detection in wastewater treatment plants (PubMed PMID 28501485)."
+        },
+        {
+          "pmid": "39338977",
+          "doi": null,
+          "citation": "Legionella molecular detection in wastewater treatment systems (PubMed PMID 39338977)."
+        }
+      ]
+    },
+    {
+      "biomarker_id": "sars_cov_2_del143_145",
+      "name": "SARS-CoV-2 spike del143/145 variant marker",
+      "omics_layer": "genomics",
+      "analyte_type": "viral RNA variant marker",
+      "disease_class": "communicable",
+      "conditions": [
+        "COVID-19 (Omicron BA.1 lineage)"
+      ],
+      "assay": "RT-qPCR allele-specific",
+      "nwss_gene_targets": [
+        "del143/145"
+      ],
+      "evidence_tier": "established",
+      "role": "variant_marker",
+      "typical_units": [
+        "copies/L wastewater",
+        "copies/g dry sludge"
+      ],
+      "preferred_normaliser": "pmmov",
+      "stability_notes": null,
+      "excretion": null,
+      "caveats": [
+        "A lineage composition marker, not a measure of overall incidence."
+      ],
+      "references": [
+        {
+          "pmid": "38598332",
+          "doi": "10.1016/j.xpro.2024.103001",
+          "citation": "Sanchez Jimenez B et al. Protocol to longitudinally quantify SARS-CoV-2 RNA in wastewater using RT-qPCR and pepper mild mottle virus normalization. STAR Protoc. 2024."
+        }
+      ]
+    }
+  ]
+}

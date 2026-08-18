@@ -1,0 +1,83 @@
+{
+  "stage": "02_build_health_panel",
+  "started_at": "2026-08-18T01:04:41.073986+00:00",
+  "finished_at": "2026-08-18T01:04:45.826872+00:00",
+  "git_revision": "26021e4c0da29cbea90a095fafc988306dbe6d44",
+  "libraries": {
+    "python": "3.11.15",
+    "numpy": "2.4.6",
+    "pandas": "3.0.5",
+    "sklearn": "1.9.0",
+    "scipy": "1.17.1",
+    "matplotlib": "3.11.1"
+  },
+  "config": {
+    "recovery_min_pct": 5.0,
+    "recovery_max_pct": 200.0,
+    "censored_substitution": "lod_over_sqrt2",
+    "primary_metric": "log10_ratio_pmmov",
+    "week_anchor": "W-SAT",
+    "min_samples_per_site_week": 1,
+    "min_population_served": 3000,
+    "min_sites_per_region_week": 1,
+    "max_lag_weeks": 4,
+    "forecast_horizons": [
+      0,
+      1,
+      2
+    ],
+    "n_cv_splits": 5,
+    "cv_gap_weeks": 4,
+    "conformal_alpha": 0.2,
+    "ewma_lambda": 0.3,
+    "alert_sigma": 2.0,
+    "surge_threshold_per_100k": 20.0,
+    "seed": 20240501,
+    "extras": {}
+  },
+  "inputs": {
+    "nyt_0": "/home/user/omics-prediction/data/raw/nyt/us-counties-2020.csv::85092b05d93d7a3655357a5e46ecd1e8f4615654c1388b40fb53fb8e985e822a",
+    "nyt_1": "/home/user/omics-prediction/data/raw/nyt/us-counties-2021.csv::91ddd9ee9efcb015d4b5471639a8b10b88f9b21764224e1075e408f68adcd188",
+    "nyt_2": "/home/user/omics-prediction/data/raw/nyt/us-counties-2022.csv::57f12be7727f79f7d3c5179bced6fc3dcc6036863bc9afa83820f57685f2a809",
+    "nyt_3": "/home/user/omics-prediction/data/raw/nyt/us-counties-2023.csv::5150ec80d826ec9cecdcac43f736519f83ab38e6a3b707875f1ca1e9f153d321"
+  },
+  "outputs": {
+    "daily": "/home/user/omics-prediction/data/interim/health_daily.parquet::b284a377cd759546d8dc155e4d34d4787c43e5834e25b02b808fc630b69df1fc",
+    "weekly": "/home/user/omics-prediction/data/interim/health_region_week.parquet::e9c67aa17d79307b5a27cd57abb7b3e94124f12c94a1bcc22a30f2409f00256f"
+  },
+  "metrics": {
+    "health": {
+      "files": [
+        {
+          "path": "/home/user/omics-prediction/data/raw/nyt/us-counties-2020.csv",
+          "rows": 890361
+        },
+        {
+          "path": "/home/user/omics-prediction/data/raw/nyt/us-counties-2021.csv",
+          "rows": 1192587
+        },
+        {
+          "path": "/home/user/omics-prediction/data/raw/nyt/us-counties-2022.csv",
+          "rows": 1191466
+        },
+        {
+          "path": "/home/user/omics-prediction/data/raw/nyt/us-counties-2023.csv",
+          "rows": 267129
+        }
+      ],
+      "rows_read": 3541543,
+      "rows_after_state_filter": 64576,
+      "rows_unresolvable_geoid": 0,
+      "duplicate_region_days_dropped": 0,
+      "rows_kept": 64576,
+      "n_regions": 59,
+      "date_min": "2020-01-25",
+      "date_max": "2023-03-23",
+      "negative_daily_counts": 390,
+      "missing_rate_avg7": 688,
+      "partial_weeks_dropped": 110,
+      "region_weeks": 9159
+    }
+  },
+  "notes": []
+}

@@ -1,0 +1,361 @@
+{
+  "stage": "01_build_wbe_panel",
+  "started_at": "2026-08-18T01:04:19.841549+00:00",
+  "finished_at": "2026-08-18T01:04:41.057182+00:00",
+  "git_revision": "26021e4c0da29cbea90a095fafc988306dbe6d44",
+  "libraries": {
+    "python": "3.11.15",
+    "numpy": "2.4.6",
+    "pandas": "3.0.5",
+    "sklearn": "1.9.0",
+    "scipy": "1.17.1",
+    "matplotlib": "3.11.1"
+  },
+  "config": {
+    "recovery_min_pct": 5.0,
+    "recovery_max_pct": 200.0,
+    "censored_substitution": "lod_over_sqrt2",
+    "primary_metric": "log10_ratio_pmmov",
+    "week_anchor": "W-SAT",
+    "min_samples_per_site_week": 1,
+    "min_population_served": 3000,
+    "min_sites_per_region_week": 1,
+    "max_lag_weeks": 4,
+    "forecast_horizons": [
+      0,
+      1,
+      2
+    ],
+    "n_cv_splits": 5,
+    "cv_gap_weeks": 4,
+    "conformal_alpha": 0.2,
+    "ewma_lambda": 0.3,
+    "alert_sigma": 2.0,
+    "surge_threshold_per_100k": 20.0,
+    "seed": 20240501,
+    "extras": {}
+  },
+  "inputs": {
+    "nwss_raw": "/home/user/omics-prediction/data/raw/nwss/master-covid-public.csv::2a849b1488d1c87b13c4ebe7d15b9c7b460314311ca59204131f2131f63a2956"
+  },
+  "outputs": {
+    "measurements": "/home/user/omics-prediction/data/interim/wbe_measurements_qc.parquet::d46522191fbd339fa39dd076b980192832a7b5494ac7575eef22875bdf477d32",
+    "site_week": "/home/user/omics-prediction/data/interim/wbe_site_week.parquet::f5e58a98a74e415e324fc499c00c849b053e438602cd41ea1b00e90559111165",
+    "region_week": "/home/user/omics-prediction/data/interim/wbe_region_week.parquet::21190cbe4e6ed9576c111943f292f231ce800aa350f5bec7b417eb94c69fdf0a"
+  },
+  "metrics": {
+    "ingest": {
+      "rows_read": 137711,
+      "unmapped_gene_targets": {},
+      "rows_unmapped_target": 0,
+      "rows_flagged_by_submitter": 0,
+      "rows_missing_concentration": 237,
+      "rows_missing_date": 0,
+      "rows_unknown_units": 16570,
+      "multi_county_sewershed_rows": 14287,
+      "rows_upstream_excluded": 4679,
+      "rows_delogged": 2191,
+      "rows_kept": 116237,
+      "n_sites": 93,
+      "n_regions": 40,
+      "targets": {
+        "sars_cov_2": 30112,
+        "rsv": 16351,
+        "influenza_a": 14169,
+        "hmpxv": 12422,
+        "norovirus_gii": 9792,
+        "influenza_b": 9683,
+        "sars_cov_2_del69_70": 9039,
+        "sars_cov_2_s": 7975,
+        "candida_auris": 3560,
+        "legionella_pneumophila": 1974,
+        "sars_cov_2_del143_145": 1160
+      },
+      "units": {
+        "copies/g dry sludge": 100274,
+        "copies/L wastewater": 15963
+      },
+      "matrices": {
+        "primary sludge": 52964,
+        "post grit removal": 41956,
+        "raw wastewater": 21317
+      },
+      "date_min": "2020-03-18",
+      "date_max": "2024-01-17"
+    },
+    "harmonise": {
+      "recovery": {
+        "recovery_sentinel_rows": 1805,
+        "groups": [
+          {
+            "group": "nwss_ca|1.0|post grit removal",
+            "n": 41627,
+            "n_with_recovery": 41627,
+            "median_as_reported": 1.198,
+            "inferred_scale": "ratio"
+          },
+          {
+            "group": "nwss_ca|1.0|primary sludge",
+            "n": 46610,
+            "n_with_recovery": 46610,
+            "median_as_reported": 1.185,
+            "inferred_scale": "ratio"
+          },
+          {
+            "group": "nwss_ca|1.0|raw wastewater",
+            "n": 16347,
+            "n_with_recovery": 16344,
+            "median_as_reported": 62.9,
+            "inferred_scale": "percent"
+          },
+          {
+            "group": "nwss_ca|4.0|post grit removal",
+            "n": 94,
+            "n_with_recovery": 94,
+            "median_as_reported": 60.7056,
+            "inferred_scale": "percent"
+          },
+          {
+            "group": "nwss_ca|4.0|raw wastewater",
+            "n": 136,
+            "n_with_recovery": 136,
+            "median_as_reported": 64.7962,
+            "inferred_scale": "percent"
+          },
+          {
+            "group": "nwss_ca|5.0|post grit removal",
+            "n": 104,
+            "n_with_recovery": 104,
+            "median_as_reported": 47.1454,
+            "inferred_scale": "percent"
+          },
+          {
+            "group": "nwss_ca|5.0|raw wastewater",
+            "n": 138,
+            "n_with_recovery": 138,
+            "median_as_reported": 55.4838,
+            "inferred_scale": "percent"
+          },
+          {
+            "group": "nwss_ca|NA|post grit removal",
+            "n": 131,
+            "n_with_recovery": 131,
+            "median_as_reported": 112.0,
+            "inferred_scale": "percent"
+          },
+          {
+            "group": "nwss_ca|NA|primary sludge",
+            "n": 6354,
+            "n_with_recovery": 6354,
+            "median_as_reported": 89.7,
+            "inferred_scale": "percent"
+          },
+          {
+            "group": "nwss_ca|NA|raw wastewater",
+            "n": 4696,
+            "n_with_recovery": 2891,
+            "median_as_reported": 40.9547,
+            "inferred_scale": "percent"
+          }
+        ],
+        "rows_rescaled_from_ratio": 88237,
+        "recovery_median_after": 105.3
+      },
+      "censoring": {
+        "rows_nonpositive_concentration": 40457,
+        "rows_censoring_inferred": 37963,
+        "rows_flag_contradicts_zero": 0,
+        "rows_censored_by_submitter": 3299,
+        "rows_censoring_flag_still_missing": 54511
+      }
+    },
+    "qc": {
+      "rows_in": 116237,
+      "rules": [
+        {
+          "code": "QC001",
+          "severity": "fail",
+          "description": "No-template control amplified",
+          "n_violations": 17,
+          "pct_violations": 0.0146
+        },
+        {
+          "code": "QC002",
+          "severity": "fail",
+          "description": "PCR inhibition detected",
+          "n_violations": 1326,
+          "pct_violations": 1.1408
+        },
+        {
+          "code": "QC003",
+          "severity": "fail",
+          "description": "Process recovery outside acceptable range",
+          "n_violations": 17011,
+          "pct_violations": 14.6348
+        },
+        {
+          "code": "QC004",
+          "severity": "fail",
+          "description": "Negative reported concentration",
+          "n_violations": 14,
+          "pct_violations": 0.012
+        },
+        {
+          "code": "QC005",
+          "severity": "fail",
+          "description": "Non-positive concentration explicitly flagged as NOT below LOD",
+          "n_violations": 0,
+          "pct_violations": 0.0
+        },
+        {
+          "code": "QC006",
+          "severity": "fail",
+          "description": "Non-positive faecal normaliser concentration",
+          "n_violations": 0,
+          "pct_violations": 0.0
+        },
+        {
+          "code": "QC008",
+          "severity": "fail",
+          "description": "Non-positive population served",
+          "n_violations": 0,
+          "pct_violations": 0.0
+        },
+        {
+          "code": "QC007",
+          "severity": "warn",
+          "description": "Analytical replicate present for this sample and target",
+          "n_violations": 9066,
+          "pct_violations": 7.7996
+        },
+        {
+          "code": "QC010",
+          "severity": "warn",
+          "description": "No process recovery control reported",
+          "n_violations": 1808,
+          "pct_violations": 1.5554
+        },
+        {
+          "code": "QC011",
+          "severity": "warn",
+          "description": "Below-LOD flag inconsistent with reported concentration",
+          "n_violations": 79,
+          "pct_violations": 0.068
+        },
+        {
+          "code": "QC012",
+          "severity": "warn",
+          "description": "Faecal normaliser not measured",
+          "n_violations": 1450,
+          "pct_violations": 1.2475
+        },
+        {
+          "code": "QC013",
+          "severity": "warn",
+          "description": "Robust outlier within site and target series",
+          "n_violations": 36,
+          "pct_violations": 0.031
+        }
+      ],
+      "n_fail": 18277,
+      "n_warn_only": 7424,
+      "n_pass": 97960,
+      "pass_rate": 0.8428,
+      "pass_rate_by_target": {
+        "candida_auris": 0.7534,
+        "hmpxv": 0.8267,
+        "influenza_a": 0.8598,
+        "influenza_b": 0.8129,
+        "legionella_pneumophila": 0.8445,
+        "norovirus_gii": 0.8095,
+        "rsv": 0.841,
+        "sars_cov_2": 0.8515,
+        "sars_cov_2_del143_145": 0.8483,
+        "sars_cov_2_del69_70": 0.8565,
+        "sars_cov_2_s": 0.9085
+      }
+    },
+    "replicates": {
+      "rows_in": 97960,
+      "rows_out": 95133,
+      "rows_collapsed": 2827,
+      "samples_with_replicates": 2816,
+      "median_replicate_log10_sd": 3.3557366306489414e-10
+    },
+    "censoring": {
+      "n_rows": 95133,
+      "n_censored": 34383,
+      "censoring_fraction": 0.3614,
+      "censored_lod_route": {
+        "submitted": 34383
+      },
+      "n_censored_unresolvable": 0,
+      "substitution_rule": "lod_over_sqrt2",
+      "censoring_fraction_by_target": {
+        "candida_auris": 0.9825,
+        "hmpxv": 0.9362,
+        "influenza_a": 0.5627,
+        "influenza_b": 0.8597,
+        "legionella_pneumophila": 0.0126,
+        "norovirus_gii": 0.0,
+        "rsv": 0.3837,
+        "sars_cov_2": 0.0117,
+        "sars_cov_2_del143_145": 0.2622,
+        "sars_cov_2_del69_70": 0.3321,
+        "sars_cov_2_s": 0.0164
+      }
+    },
+    "metrics": {
+      "n_rows": 95133,
+      "coverage": {
+        "log10_conc": 95133,
+        "log10_ratio_pmmov": 94319,
+        "log10_load_per_100k": 13233
+      }
+    },
+    "standardisation": {
+      "metric": "log10_ratio_pmmov",
+      "min_observations": 20,
+      "min_detect_fraction": 0.2,
+      "n_series": 588,
+      "n_series_below_min_observations": 22,
+      "n_series_below_min_detect_fraction": 156,
+      "n_standardised": 74468,
+      "n_excluded": 20665
+    },
+    "standardisation_causal": {
+      "metric": "log10_ratio_pmmov",
+      "variant": "causal_expanding",
+      "min_window": 20,
+      "min_detect_fraction": 0.2,
+      "n_standardised": 66108,
+      "n_excluded": 29025
+    },
+    "site_week": {
+      "rows_in": 95133,
+      "site_weeks": 30104,
+      "site_weeks_dropped_min_samples": 0,
+      "n_sites": 90,
+      "weeks": 199,
+      "median_samples_per_site_week": 3.0,
+      "overall_detect_fraction": 0.6056
+    },
+    "region_week": {
+      "metric": "log10_ratio_pmmov_z",
+      "region_weeks": 12297,
+      "region_weeks_dropped_min_sites": 0,
+      "n_regions": 39,
+      "median_sites_per_region_week": 1.0
+    },
+    "region_week_causal": {
+      "metric": "log10_ratio_pmmov_zc",
+      "region_weeks": 10824,
+      "region_weeks_dropped_min_sites": 0,
+      "n_regions": 39,
+      "median_sites_per_region_week": 1.0
+    }
+  },
+  "notes": [
+    "Recovery scale and censoring flags are harmonised before QC; running QC on unharmonised NWSS input fails ~82% of rows for reasons that are conventions, not data quality."
+  ]
+}

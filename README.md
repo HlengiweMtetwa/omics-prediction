@@ -1,6 +1,181 @@
-# Omics-Based Disease Prediction — Demo Pipeline
+# Omics-Based Wastewater Surveillance Platform
 
-## What this is
+Research execution platform for **"Omics Approaches to Predictive Prevention
+Tools for Disease Surveillance Through Wastewater-Based Epidemiology"**
+(Hlengiwe Nombuso Mtetwa, Ph.D. — Department of Community Health Studies,
+Durban University of Technology).
+
+The `omics_wbe/` package implements and executes the proposal's three research
+objectives against **real surveillance data**, and generates its projected
+outputs. It is independent of the synthetic demo pipeline documented further
+down this file.
+
+## What was actually run
+
+| | |
+|---|---|
+| Wastewater measurements ingested | 137,711 (US CDC NWSS, California, Mar 2020 – Jan 2024) |
+| Measurements passing QC | 97,960 (84.3%) |
+| Biomarker targets measured | 11 (SARS-CoV-2 + 2 variant markers, influenza A/B, RSV, norovirus GII, mpox, *C. auris*, *Legionella*) |
+| Counties modelled | 17, joined to NYT county COVID-19 case records |
+| Signal used for modelling | causal (expanding-window) standardisation, winsorised at ±3 robust SD |
+| Biomarkers catalogued | 36, across genomics / proteomics / metabolomics, 24 peer-reviewed references |
+| Tests | `pytest tests/ -q` |
+
+**No data in this section is synthetic.** Raw inputs are not redistributed —
+see [`docs/DATA_ACQUISITION.md`](docs/DATA_ACQUISITION.md) for retrieval and
+checksums.
+
+## Headline findings
+
+1. **Wastewater leads reported cases by ~3 weeks** (peak median Spearman
+   ρ = 0.57 across 17 counties; per-county optimum most often 2 weeks).
+2. **It predicts change, not level.** A within-site standardised signal has no
+   information about a county's absolute case rate — the standardisation removed
+   exactly that — and level models on it fail (R² < 0). Re-framed onto the
+   change in log case rate, the same signal is genuinely predictive.
+3. **Its distinct value is early warning.** For two-week-ahead surge detection,
+   models carrying the wastewater block reach AUPRC 0.34 against a 0.103 base
+   rate (3.3× lift) versus **0.138 for clinical autoregression alone** — a 2.4×
+   advantage. For forecasting *magnitude* the incremental value is smaller and
+   only conclusive at the 2-week horizon (95% interval excludes zero at +2 wk;
+   at +0 and +1 wk the point estimate favours wastewater but the interval still
+   contains zero).
+4. **Positive decision-curve net benefit** at 23 of 30 thresholds tested
+   (0.06–0.60), which is the concrete sense in which the signal is *actionable*.
+5. **The validation protocol matters more than the model.** Random k-fold
+   cross-validation — as specified in the original proposal — understates error
+   on this panel and inflates R² by up to 0.56.
+
+Full technical report: `results/wbe/reports/technical_report.html`
+(regenerated from `study_results.json`, so its prose cannot drift from its numbers).
+
+## Quick start
+
+```bash
+pip install -r requirements.txt
+python -m omics_wbe.cli check-sources   # confirm raw inputs are present
+python -m omics_wbe.cli run --force     # full pipeline + study + report (~6 min)
+python -m omics_wbe.cli verify          # re-hash every manifest input/output
+```
+
+Other commands:
+
+```bash
+python -m omics_wbe.cli catalog --class non_communicable --min-tier emerging
+python -m omics_wbe.cli archives        # show NCBI/ENA queries, probe connectivity
+python -m omics_wbe.cli stage-one       # build analysis panels only
+```
+
+## Architecture
+
+```
+omics_wbe/
+  config.py            canonical schemas, paths, AnalysisConfig (every knob, one place)
+  provenance.py        SHA-256 manifests, drift verification
+  biomarkers/          evidence-tiered catalogue (36 markers, 24 references)
+  ingest/              sources registry + NWSS / NYT / QLD / sequence-archive connectors
+  normalize/           harmonisation, censoring, PMMoV ratio, standardisation, back-calculation
+  qc/                  12-rule QC engine (fail vs warn, every violation counted)
+  integrate/           region x epiweek alignment, lag/lead correlation
+  features/            causal lag construction, three switchable feature blocks
+  modeling/            rolling-origin validation, baselines, regression, classification, sensitivity
+  surveillance/        EWMA alarms, lead time, surge labels, decision-curve analysis
+  governance/          catchment suppression, sensitive-setting screening
+  reporting/           figures and the auto-generated technical report
+  pipeline.py          stage 1: raw -> analysis panels (cached, manifested)
+  study.py             stage 2: all three objectives -> results bundle
+  cli.py               command-line entry point
+```
+
+Adding a surveillance programme means writing one connector that emits
+`WBE_MEASUREMENT_COLUMNS`. Nothing downstream changes.
+
+## Design decisions that carry the science
+
+These were forced by the data, and each is a place a naive implementation
+silently produces wrong answers.
+
+**Harmonise before QC.** Contributing laboratories report process recovery as a
+*ratio* in some submission groups and a *percent* in others, and report
+non-detects as a zero concentration with the below-LOD flag unset. Running QC on
+unharmonised input fails **82%** of a real NWSS extract for reasons that are
+conventions, not data quality. After harmonisation the pass rate is 84%.
+
+**Causal features, not retrospective ones.** Whole-series z-scores standardise a
+March 2021 sample partly by measurements taken in 2023. All model features use
+the expanding-window variant; the retrospective version is reported only as the
+optimism comparison.
+
+**Rolling-origin validation with a gap.** Random k-fold puts week *t−1* of a
+county in training and week *t* in test. Both protocols are run; only
+rolling-origin is reported as performance.
+
+**Target-appropriate baselines.** A persistence baseline scored against a
+*change* target predicts a level where a difference is expected, producing a
+meaningless R² of −133. Baselines are gated by target mode.
+
+**Winsorised signal.** A robust z-score of a series containing an epidemic
+excursion is heavily tailed — the post-Omicron collapse reaches −27 here. Ridge
+on the unclipped signal reaches R² of −4.5; gradient boosting on the identical
+input is unaffected. The signal is clipped at ±3 robust SD and the specification
+curve reports performance across that choice.
+
+**Calibrated alert probabilities.** An uncalibrated random forest discriminated
+at AUROC 0.86 while scoring *worse than the base rate* on Brier, which would
+have made the decision curve meaningless.
+
+**Refuse to guess excretion parameters.** Of 36 catalogued biomarkers, exactly
+one has a transferable literature excretion fraction. `parameters_from_catalog`
+raises `ParameterUnavailable` for the rest, so a prevalence figure can never be
+produced from a parameter nobody measured. That refusal is the deliverable, not
+an obstacle to it.
+
+**Evidence tiers.** Every catalogue entry is `established`, `emerging` or
+`prospective`. `inference_ready()` refuses prospective markers for published
+claims; they exist to fix the schema and record the open question.
+
+## What is *not* done, and why
+
+Stated plainly rather than buried in a limitations paragraph.
+
+| Gap | Reason |
+|---|---|
+| **No sequence-level omics processed** | Outbound access to NCBI/ENA/DDBJ is blocked in this environment. Connectors are implemented and tested; `plan_quantification()` enumerates the read-processing steps needed to turn a run accession into a measurement. Genomic depth here is assay-level PCR targets, not metagenomes. |
+| **No non-communicable-disease measurements** | No metformin or metabolite data were obtainable. The catalogue, mass-balance engine, Monte-Carlo uncertainty propagation and refusal gate are implemented and tested; the NCD arm is methodological, not empirical. |
+| **Only SARS-CoV-2 validated quantitatively** | Matched case data existed only for COVID-19 in California. The other ten targets are characterised descriptively. The pipeline is pathogen-agnostic. |
+| **Reported cases are a biased comparator** | Clinical ascertainment changed enormously across 2020–2023. This analysis cannot separate a change in transmission from a change in testing. |
+| **Snakemake workflow not executed** | `workflow/Snakefile` wraps the same CLI commands, but Snakemake could not be installed here (a transitive dependency fails to build). The CLI is the verified path. |
+
+## Documentation
+
+| Document | Contents |
+|---|---|
+| [`docs/SOP_01_data_acquisition_and_mining.md`](docs/SOP_01_data_acquisition_and_mining.md) | Systematic data mining, selection criteria, provenance |
+| [`docs/SOP_02_qc_and_normalisation.md`](docs/SOP_02_qc_and_normalisation.md) | Harmonisation, QC rules, censoring, normalisation |
+| [`docs/SOP_03_modelling_and_validation.md`](docs/SOP_03_modelling_and_validation.md) | Validation protocol, baselines, calibration, sensitivity |
+| [`docs/ETHICS_AND_GOVERNANCE.md`](docs/ETHICS_AND_GOVERNANCE.md) | Ethics guidelines (IREC submission draft) — group privacy, not individual privacy, is the operative concern |
+| [`docs/POLICY_BRIEF.md`](docs/POLICY_BRIEF.md) | What wastewater surveillance can and cannot tell a health department |
+| [`docs/WORK_PLAN_AND_BUDGET.md`](docs/WORK_PLAN_AND_BUDGET.md) | Status against the proposal timeline, budget, impact metrics |
+| [`docs/MANUSCRIPTS.md`](docs/MANUSCRIPTS.md) | Three manuscript outlines built from produced results |
+| [`docs/DATA_ACQUISITION.md`](docs/DATA_ACQUISITION.md) | How to obtain the raw inputs, with checksums |
+
+## Reproducibility
+
+Every stage writes a manifest to `results/wbe/manifests/` recording input and
+output SHA-256 hashes, full configuration, random seed and library versions.
+`python -m omics_wbe.cli verify` re-hashes everything and reports drift. Any
+published number whose manifest reports drift should be withdrawn until re-run.
+
+---
+
+# Appendix — Synthetic Demo Pipeline and Platform Application
+
+Everything below predates the `omics_wbe/` platform above and is
+independent of it. The demo pipeline's data is **synthetic**; the
+registry, auth, API and Streamlit layers are real infrastructure.
+
+## The demo pipeline
 
 A small, end-to-end demonstration pipeline showing how genomic, protein,
 metabolite and metadata features could be merged and fed into a classifier,
