@@ -55,10 +55,21 @@ pytest tests/ -v
   default hyperparameters.
 - No provenance tracking beyond the upload/job records themselves, no
   evidence hierarchy, and no API layer exists yet.
-- Pipeline jobs run the *synthetic demo* pipeline only (collect_data ->
-  prepare_dataset -> train_model) - no real bioinformatics tool (FastQC,
-  Kraken2, CARD/RGI, etc.) is wired in, and a job does not yet consume a
-  specific uploaded file; it always regenerates its own synthetic data.
+- A pipeline job now analyzes a real uploaded tabular file when one exists
+  for the project (`ai_wasteguard/analysis.py`): real per-column statistics
+  always, plus a real trained/evaluated classifier when the file has a
+  recognizable label column (`label`, `disease_present`, `target`,
+  `outcome`, `class`, or `diagnosis`) with enough rows and class variety -
+  it never fabricates a metric or guesses at a label column that isn't
+  there. Only when a project has **no** analyzable upload does a job fall
+  back to the old synthetic demo pipeline (collect_data -> prepare_dataset
+  -> train_model, still real subprocesses, but generating random data) -
+  and that fallback's output is unmissably banner-labeled "SYNTHETIC DEMO
+  DATA" everywhere it's shown (job log, generated report), so it's never
+  mistaken for a real result. No real bioinformatics tool (FastQC, Kraken2,
+  CARD/RGI, etc.) is wired in yet, and the real-data path only supports
+  tabular formats (csv/tsv/txt/json/xlsx/xls/parquet) - sequence files
+  (fasta/fastq/bam/vcf/etc.) can be uploaded and stored but aren't analyzed.
 - Jobs run via a Python `threading.Thread` per submission, not a real task
   queue (Celery/RQ) - adequate for a single-process prototype with a handful
   of concurrent users, not for production load or multi-worker deployment.
@@ -72,10 +83,9 @@ pytest tests/ -v
   `models/random_forest_model.pkl` and `results/` outputs reflect the most
   recent pipeline run and will go stale if the code changes without
   re-running the pipeline.
-- The API (`api/`) only covers auth and projects so far - sites, samples,
-  uploads, jobs, reports and models are only reachable through the
-  Streamlit UI for now. No rate limiting is implemented despite
-  `ACCOUNT_LOCKOUT_*` existing at the auth-service level.
+- The API (`api/`) covers auth, projects, sites, sampling events, samples,
+  uploads, jobs, reports, and models. No rate limiting is implemented
+  despite `ACCOUNT_LOCKOUT_*` existing at the auth-service level.
 
 ## Persistence and authentication (`ai_wasteguard/`)
 
@@ -177,10 +187,48 @@ log, and vice versa, because both go through `ai_wasteguard.auth` /
   `app_state.py` - `POST /api/v1/auth/register`, `POST /api/v1/auth/login`
   (returns a bearer token), `GET /api/v1/auth/me`.
 - `GET/POST /api/v1/projects`, `GET /api/v1/projects/{id}` - the same
-  RBAC as the UI (`permissions.CAN_CREATE_PROJECT`), and requesting a
-  project you don't own returns 404, not 403 - deliberately, so the API
-  doesn't confirm a project id exists to someone who can't see it (same
-  principle as the enumeration-safe login error).
+  RBAC as the UI (`permissions.CAN_CREATE_PROJECT`).
+- `GET/POST /api/v1/projects/{project_id}/sites`,
+  `GET/POST /api/v1/sites/{site_id}/sampling-events`,
+  `GET/POST /api/v1/sampling-events/{event_id}/samples` - nested the same
+  way the registry actually is, each authorization-checked up the whole
+  chain (a sample's event's site's project must be owned by the caller).
+  A duplicate replicate for the same sampling event returns 409, not 500.
+- `GET/POST /api/v1/samples/{sample_id}/uploads` (multipart) - same
+  checksum/extension-allowlist validation as the UI upload path
+  (`ai_wasteguard.uploads.save_upload`, not a reimplementation).
+- `GET/POST /api/v1/projects/{project_id}/jobs`, `GET /api/v1/jobs/{id}` -
+  submitting a job returns immediately with status `queued`; execution
+  runs on a background thread (mirroring the Streamlit Pipelines page)
+  so the request isn't blocked for the ~5 seconds the synthetic pipeline
+  takes. The job row is committed explicitly before the thread starts -
+  the background thread opens its own DB session, and waiting for
+  FastAPI's normal request-teardown commit would let it race a read of a
+  row that isn't durably visible yet.
+- `GET/POST /api/v1/projects/{project_id}/reports`,
+  `GET /api/v1/reports/{id}/content` (returns the report's HTML body) -
+  same `ai_wasteguard.reports.generate_project_summary_report` the
+  Streamlit Reports page calls.
+- `GET/POST /api/v1/projects/{project_id}/models`,
+  `POST /api/v1/models/{id}/approve` - registering a model validates the
+  referenced job both belongs to the given project and is `completed`
+  (a job from a different project the caller owns returns 404, not a
+  silent cross-project registration); approval is gated to the
+  Administrator role (`permissions.CAN_APPROVE_MODELS`), checked after
+  ownership so a non-owner still gets 404.
+- `GET /api/v1/admin/users`, `POST /api/v1/admin/users/{id}/role`,
+  `POST /api/v1/admin/users/{id}/disable`/`enable` - Administrator-only
+  (`permissions.CAN_MANAGE_USERS`). The role endpoint rejects `administrator`
+  as a target value (400), and every one of these three endpoints rejects
+  acting on a user whose *current* role is already Administrator (400) -
+  granting or revoking Administrator status stays exclusively in
+  `scripts/create_admin.py`, run out-of-band.
+- Requesting (or mutating) a resource you don't own returns 404, not
+  403 - deliberately, at every level of the chain, so the API never
+  confirms a resource id exists to someone who can't see it (same
+  principle as the enumeration-safe login error). Ownership is checked
+  *before* role, so a non-owner gets 404 even when they'd also fail the
+  role check - the stronger property wins.
 - Unhandled exceptions never reach the client as a stack trace - a
   global handler logs and returns a generic 500.
 - CORS is closed by default; set `CORS_ALLOWED_ORIGINS` to open it to
@@ -200,15 +248,80 @@ uvicorn api.main:app --reload
 
 Verified with real HTTP requests (curl against a running `uvicorn`
 process, not just FastAPI's in-process TestClient) covering the full
-register → login → authenticated create/list/get flow, all the negative
-cases (duplicate email, wrong password, missing/invalid token, a Viewer
-role rejected from creating a project, a non-owner requesting someone
-else's project id), and confirmed via the `audit_log` table that API-driven
-actions are indistinguishable from UI-driven ones.
+register → login → project → site → sampling event → sample → upload →
+job chain, all the negative cases (duplicate email, wrong password,
+missing/invalid token, a Viewer role rejected from creating a project, a
+non-owner requesting someone else's project/site, a duplicate replicate
+returning 409, an unsupported file extension returning 400), and
+confirmed directly in the database (including `audit_log`) that
+API-driven actions - and the on-disk file checksum - are indistinguishable
+from UI-driven ones. Submitted a real job via curl and polled
+`GET /api/v1/jobs/{id}` until it reported `completed`, then generated a
+report and fetched its content, and registered + approved a model from
+that completed job (verifying the cross-project-job and non-Administrator
+rejection paths).
 
 ```bash
 pytest tests/test_api.py -v
 ```
+
+## Web frontend (`frontend/`)
+
+A Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 client for
+the FastAPI backend above, covering registration, login, the dashboard
+(`GET /api/v1/dashboard`), project listing/creation, and a project detail
+page with nested site → sampling event → sample → file upload creation and
+drilldown, pipeline job submission with live polling to completion, report
+generation/preview/download, and model registration/approval. This brings
+the frontend to full functional parity with the Streamlit registry app's
+per-project surface (`Home.py` remains available as an alternative UI over
+the same backend).
+
+```bash
+cd frontend
+npm install
+cp .env.local.example .env.local   # set NEXT_PUBLIC_API_BASE_URL to your API's origin
+npm run dev
+```
+
+The backend must have the frontend's origin allow-listed for CORS:
+
+```bash
+CORS_ALLOWED_ORIGINS="http://localhost:3000" uvicorn api.main:app --reload
+```
+
+Verified end-to-end in a real headless browser (Playwright) against a live
+backend: unauthenticated visitor redirected to `/login`; register → redirect
+to `/login`; log in → redirect to `/dashboard` with real (not mocked) data
+from the API; create a project through the React form → it appears in
+`/projects`, a real round trip through `POST /api/v1/projects`; open a
+project's detail page → create a site → expand it and create a sampling
+event → expand that and create a sample → expand that and upload a real
+file, each step a real API round trip and each list re-fetched (not
+appended client-side) so what's shown is what the server actually
+persisted, with the upload's real size and server-computed validation
+status (not client-guessed) rendered afterward; submit a pipeline job → the
+page polls `GET /api/v1/jobs/{id}` and the status badge moves from
+`queued`/`running` to `completed` as the real background job (the same
+`threading.Thread`-executed pipeline the API layer runs) finishes, not a
+client-side timer fake; register a model from that completed job → its
+draft badge and the role-gated "Requires Administrator" message render
+correctly for a Researcher account; generate a report → preview it in an
+iframe showing the real generated HTML, and download it as a file; promote
+the account to Administrator through the real `scripts/create_admin.py`
+bootstrap script (a subprocess against the live database, not a UI
+shortcut), log back in, and approve the model - the badge updates to
+`approved`; no crashes or console errors along the way.
+
+Colors, spacing, and status indicators follow a validated categorical/status
+palette (`app/globals.css`), with light/dark variants selected by both the OS
+theme and an explicit `data-theme` override.
+
+`npm audit` on the fresh scaffold reports vulnerabilities confined to
+dev-tooling transitive dependencies (ESLint's `minimatch`/`brace-expansion`,
+PostCSS, `sharp`); none are reachable from the app's runtime code, and
+`npm audit fix --force` would downgrade Next.js from 16.2.12 to 9.3.3, so it
+was not applied.
 
 ## Registry + upload + pipelines + reports + models app (`Home.py`)
 
@@ -252,6 +365,27 @@ across a role change, not just defined.
    `python scripts/create_admin.py <their-email>`.
 3. They log out and back in (role is read at login time) to pick up the
    new role.
+
+Once at least one Administrator exists, day-to-day user management (role
+changes among the self-registerable roles, disabling/re-enabling accounts)
+is available through the frontend's **Admin** page - visible in the nav
+only to Administrator accounts, backed by `GET/POST /api/v1/admin/users/...`.
+Granting or revoking Administrator itself stays CLI-only by design
+(`ai_wasteguard/admin.py`'s `_require_non_administrator_target` rejects any
+role or status change targeting an Administrator account, generalizing the
+rule above rather than special-casing it): the API returns 400 if you try
+to set a user's role to `administrator` through the admin page, and 400 if
+you try to change the role or status of an account that is already an
+Administrator - including your own, since the caller of these endpoints is
+themselves necessarily an Administrator. Verified end-to-end in a headless
+browser: a non-Administrator sees no "Admin" nav link at all; after
+promoting an account via the real `scripts/create_admin.py` script (not a
+UI shortcut) and logging back in, the Admin page lists all users, changing
+a non-admin user's role persists and is reflected immediately, disabling a
+user's account is enforced at the API (their next login attempt gets a
+real 403, not just a hidden UI element), and the admin's own row - along
+with any other Administrator's row - shows a locked, disabled control
+instead of an editable one.
 
 ## Roadmap
 

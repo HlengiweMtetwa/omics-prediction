@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from ai_wasteguard import permissions, registry
-from api.deps import get_current_user, get_db
+from api.deps import get_current_user, get_db, require_owned_project
 from api.schemas import ProjectCreateRequest, ProjectResponse
 
 router = APIRouter(prefix="/api/v1/projects", tags=["projects"])
@@ -53,8 +53,5 @@ def create_project(
 def get_project(
     project_id: str, current_user=Depends(get_current_user), db: Session = Depends(get_db)
 ) -> ProjectResponse:
-    projects = registry.list_projects_for_owner(db, current_user.id)
-    for project in projects:
-        if project.id == project_id:
-            return _to_response(project)
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found.")
+    project = require_owned_project(db, project_id, current_user)
+    return _to_response(project)

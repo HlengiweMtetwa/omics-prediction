@@ -12,3 +12,6 @@ __pycache__/
 # Local secrets / local database
 .env
 instance/
+
+# Scratch working files (e.g. one-off deliverables like generated slide decks)
+.scratch/

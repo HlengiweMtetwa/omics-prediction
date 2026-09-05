@@ -12,6 +12,7 @@ CAN_UPLOAD = {UserRole.ADMINISTRATOR, UserRole.RESEARCHER, UserRole.LABORATORY_S
 CAN_RUN_PIPELINES = {UserRole.ADMINISTRATOR, UserRole.RESEARCHER, UserRole.LABORATORY_SCIENTIST}
 CAN_REGISTER_MODELS = {UserRole.ADMINISTRATOR, UserRole.RESEARCHER}
 CAN_APPROVE_MODELS = {UserRole.ADMINISTRATOR}
+CAN_MANAGE_USERS = {UserRole.ADMINISTRATOR}
 
 # Roles a user may self-select at registration. Administrator is granted
 # out-of-band (e.g. direct DB/admin action), never via self-registration.
